@@ -508,14 +508,19 @@ this.checked)\"><font size=\'2\'>Show jobs</b>''' % (node_state,name, name)
                     print "%7.2f%%</font> " % (effic*100.0),
                     print "</span>",
                     
-                    
-                    if mem > memreq and memreq > 0.0:
-                        print "<font color='red'>",
-                    else:
-                        if mem < 0.5*memreq:
-                            print "<font color='gray'>",
+# Try and except to test if the user has defined mem in script
+                    try:
+                        if mem > memreq and memreq > 0.0:
+                            print "<font color='red'>",
                         else:
-                            print "<font color='black'>",
+                            if mem < 0.5*memreq:
+                                print "<font color='gray'>",
+                            else:
+                                print "<font color='black'>",
+
+                    except:
+                        memreq=0.0
+                        print "<font color='black'>",
                     
 
                     print "%.2f/%.2f GB</font>" %(mem,memreq)
