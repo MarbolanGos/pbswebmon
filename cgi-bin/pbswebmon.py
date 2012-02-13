@@ -32,36 +32,78 @@ import os,urllib
 import re
 
 import cgitb; cgitb.enable()
+# get options from config file
+import ConfigParser
 
-NODE_STATES=['down','free','job-exclusive','offline','down,offline','down,job-exclusive','state-unknown','down,busy','job-exclusive,busy']
+
+# Input variables
+NODE_STATES=['down','free','job-exclusive','offline','busy','down,offline','down,job-exclusive','state-unknown','down,busy','job-exclusive,busy']
 JOB_STATES=['R','Q','E','C','H','W']
 REFRESH_TIME = "30"
 JOB_EFFIC={}
 USER_EFFIC={}
+CONFIG_FILE="/etc/pbswebmon.conf"
+GRID_COLS=4
+DEBUG=False
+njobs=-1
+
+def header():
+	""" Print the header of the HTML page.
+	The parameter REFRESH_TIME is globaly defined.
+	\todo Allow REFRESH_TIME to be included in the parameters file.
+	"""
+	print '''<html>
+<head>
+	<title>PBSWebMon</title> 
+	<script src="/pbswebmon/table.js" type="text/javascript"></script>
+	<script src="/pbswebmon/datasel.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		var iTimeout;
+		/*=window.setTimeout('if (location.reload) location.reload();', %s*1000);*/
+		function set_refresh(refresh) {
+			if (refresh) {
+				if (window.setTimeout) {
+					iTimeout = window.setTimeout('if (location.reload) location.reload();', %s*1000);
+				}
+			} else {
+				if (window.clearTimeout) window.clearTimeout(iTimeout);
+			}
+		}
+	</script>
+	
+	<link rel="stylesheet" type="text/css" href="/pbswebmon/table.css" media="all">
+	<link rel="stylesheet" type="text/css" href="/pbswebmon/local.css" media="all">
+</head>''' % (REFRESH_TIME, REFRESH_TIME)
 
 def user_effic(user):
-	effic=0.0
-
+	""" Efficiency for the running user
+	\param user The user to be parsed
+	\return effic The calculated efficiency
+	"""
+	effic = 0.0
 	if user in USER_EFFIC:
 		for job in USER_EFFIC[user]:
-			effic=effic+job
-		effic=(effic/float(len(USER_EFFIC[user]))*100.0)
+			effic += job
+		effic /= float(len(USER_EFFIC[user]))*100.0
 
 	return effic
 		
 
 def job_effic(myjob):
-	effic=0.0
-	walltime=0.0
+	""" Efficiency for the job
+	\param myjob The job to be parsed
+	\return effic The calculated job efficiency
+	"""
+	effic = 0.0
+	walltime = 0.0
 	if 'resources_used' in myjob:
 		if 'cput' in myjob['resources_used']:
-			cput=convert_time(myjob['resources_used']['cput'][0])
+			cput = convert_time(myjob['resources_used']['cput'][0])
 		if 'walltime' in myjob['resources_used']:
-			walltime=convert_time(myjob['resources_used']['walltime'][0])		
+			walltime = convert_time(myjob['resources_used']['walltime'][0])		
 		
-
 	if walltime != 0.0:
-		effic=float(cput)/float(walltime)
+		effic = float(cput)/float(walltime)
 
 	return effic
 
@@ -97,47 +139,52 @@ def get_dn (ownershort):
 	return ownerdn
 
 def convert_time (timestr):
-	
+	""" Convert time into seconds
+	\param timestr The time in HH:MM:SS
+	\return seconds The time in seconds
+	"""
 	hours,mins,secs=timestr.split(':')
 
 	seconds=(60*60*int(hours))+(60*int(mins))+int(secs)
 	return seconds
 	
 def convert_to_gb (kbmem):
-	idx=kbmem.rfind("kb")
-	if (idx!=-1):
-		mem=kbmem[0:idx]
-		mem=float(mem)
-		return mem/(1000.0*1000.0)
-	idx=kbmem.rfind("mb")
-	if (idx!=-1):
-		mem=kbmem[0:idx]
-		mem=float(mem)
-		return mem/(1000.0)
+	""" Convert kilobytes of memory to gigabytes
+	\param kbmem The amount of memory in kB
+	\return mem The amount of memory in GB
+	"""
+	idx = kbmem.rfind("kb")
+	if (idx != -1):
+		mem = float(kbmem[0:idx])/(1000.0*1000.0)
+		return mem
+
+	idx = kbmem.rfind("mb")
+	if (idx != -1):
+		mem = float(kbmem[0:idx])/(1000.0)
+		mem = float(kbmem[0:idx])/(1000.0)
+		return mem
 
 def fill_user_list (jobs):
 	users={}
 	for name, atts in jobs.items():
 		if 'job_state' in atts:
-			job_type=atts['job_state'][0]
-		ownershort=atts['Job_Owner'][0].split('@')[0]
-		effic=job_effic(atts)
+			job_type = atts['job_state'][0]
+		ownershort = atts['Job_Owner'][0].split('@')[0]
+		effic = job_effic(atts)
 		if not ownershort in USER_EFFIC:
-			USER_EFFIC[ownershort]=[]
+			USER_EFFIC[ownershort] = []
 		USER_EFFIC[ownershort].append(effic)
 		if not ownershort in users:
-			users[ownershort]={}
-			users[ownershort]['jobs']=1
+			users[ownershort] = {}
+			users[ownershort]['jobs'] = 1
 			for state in JOB_STATES:
 				if state == job_type:
-					users[ownershort][state]=1
+					users[ownershort][state] = 1
 				else:
-					users[ownershort][state]=0
-			
-				
+					users[ownershort][state] = 0
 		else:
-			users[ownershort]['jobs']=users[ownershort]['jobs']+1
-			users[ownershort][job_type]=users[ownershort][job_type]+1
+			users[ownershort]['jobs'] += 1
+			users[ownershort][job_type] += 1
 	return users
 		   
 def print_user_summary(users):
@@ -258,7 +305,7 @@ def print_key_table():
 
 	print "<table class='key_table'>"
 	print "<tr><th>Node color codes</th></tr>"
-	allstates=NODE_STATES[:]
+	allstates = NODE_STATES[:]
 	allstates.append('partfull')
 	for s in allstates:
 		print "<tr><td class='%s'>%s</td></tr>" %(s,s)
@@ -432,10 +479,11 @@ def print_job_list():
 	
 	print "<tbody>"
 	for name,job in jobs.items():
-	#	print "<!-- DEBUG: ",job,"-->"
+		owner = job['Job_Owner'][0]
+		print "<!-- DEBUG: ",owner.split('@')[0],"-->"
 		print "<tr>"
-		print "<td>",name,"</td>"
-		print "<td>",job['Job_Owner'][0],"</td>"
+		print "<td>",name.split('.')[0],"</td>"
+		print "<td>",owner.split('@')[0],"</td>"
 		print "<td>",job['queue'][0],"</td>"
 		print "<td>",job['Job_Name'][0],"</td>"
 		if job['Resource_List'].has_key('nodect'):
@@ -457,13 +505,9 @@ def print_job_list():
 	
 	print "</tbody></table>"
 
-#
-# Start of pbswebmon
-#
-
-GRID_COLS=4
-DEBUG=False
-njobs=-1
+######################
+# Start of pbswebmon #
+######################
 
 # get command line options (unused now?)
 optlist, args=getopt(sys.argv[1:], 'j:')
@@ -475,11 +519,6 @@ for o,a in optlist:
 	if o == '-j':
 		njobs=int(a)
 		
-
-# get options from config file
-import ConfigParser
-CONFIG_FILE="/etc/pbswebmon.conf"
-
 try:
 	config=ConfigParser.RawConfigParser({'name':None, 'translate_dns':'no', 'gridmap': '/etc/grid-security/gridmapdir'})
 	config.readfp(open(CONFIG_FILE))
@@ -499,8 +538,7 @@ for opt in gridopts:
 	if opt[0]=='gridmap':
 		gridmap=opt[1]
 
-print "Content-Type: text/html"	 # HTML is following
-print 
+print "Content-Type: text/html\n\n"	 # HTML is following
 try:
 	p=PBSQuery(server)
 	nodes=p.getnodes()
@@ -511,46 +549,12 @@ except PBSError, e:
 	print "<p>Please check configuration in ",CONFIG_FILE, "</p>"
 	sys.exit(1)
 
-	
+# Print the header
+header()
 print '''
-<html>
-<head>
-<title>pbswebmon</title> 
-<script src="/pbswebmon/table.js" type="text/javascript"></script>
-<script src="/pbswebmon/datasel.js" type="text/javascript"></script>
-
-
-
-<script type="text/javascript">
-
-var iTimeout;
-
-/*=window.setTimeout('if (location.reload) location.reload();', %s*1000);*/
-
-function set_refresh(refresh) {
-
-	if (refresh) {
-	if (window.setTimeout) {
-		iTimeout =
-			window.setTimeout('if (location.reload) location.reload();', %s*1000);
-	}
-	} else {
-	if (window.clearTimeout) window.clearTimeout(iTimeout);
-	}
-}
-
-</script>
-
-
-
-
-
-<link rel="stylesheet" type="text/css" href="/pbswebmon/table.css" media="all">
-<link rel="stylesheet" type="text/css" href="/pbswebmon/local.css" media="all">
-</head>
 <body>
 
-''' % (REFRESH_TIME, REFRESH_TIME)
+'''
 
 
 users={}
@@ -598,14 +602,19 @@ print_node_summary(nodes)
 print "</td></tr></table>"
 print "</div>"
 
-print "<br clear='all'>"
+#print "<br clear='all' style=\"clear: inherit;\">"
+#print "<p></p>"
+print "<div style=\"display: block;\">"
 
+# Show all lame and informations
 if DEBUG:
 	print "<!-- ",nodelist,"-->"
 print_lame_list(nodelist)
 
 # Show all jobs
 print_job_list()
+
+print"</div>"
 
 print"</body></html>"
 
