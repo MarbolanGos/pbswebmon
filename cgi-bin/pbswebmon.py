@@ -564,7 +564,8 @@ def print_job_list():
 		if job['Resource_List'].has_key('nodect'):
 			if job['job_state'][0] == 'R':
 				str_hosts = ", ".join(all_hosts)
-				print "<!-- DEBUG str_hosts: ",str_hosts,"-->"
+				if DEBUG:
+					print "<!-- DEBUG str_hosts: ",str_hosts,"-->"
 				print "				<td>"+job['Resource_List']['nodect'][0]+" ("+str_hosts+")</td>"
 			else:
 				print "				<td>"+job['Resource_List']['nodect'][0]+"</td>"
