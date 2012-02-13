@@ -46,6 +46,7 @@ CONFIG_FILE="/etc/pbswebmon.conf"
 GRID_COLS=4
 DEBUG=False
 njobs=-1
+users={}
 
 def header():
 	""" Print the header of the HTML page.
@@ -74,6 +75,24 @@ def header():
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/table.css" media="all">
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/local.css" media="all">
 </head>''' % (REFRESH_TIME, REFRESH_TIME)
+
+def print_summary():
+	""" Print the Summary cluster status
+	"""
+	print "<!-- print_summary -->"
+	print "<div class='summary_box'>"
+	print '''	<table class='summary_box_table'>
+		<tr class='summary_box_entry'>
+			<td>
+				<b>Cluster status</b><br/>
+				%s<br />
+				Refreshes every %s seconds. <br />
+				<form class="showdetails">
+					<INPUT TYPE=CHECKBOX NAME="showdetails" CHECKED  onClick=\"show_hide_data(\'jobdata\', this.checked)\">Show all job details<br />
+					<INPUT TYPE=CHECKBOX NAME="Fixed header" CHECKED onClick=\"on_top(\'summary_box\', this.checked)\">Header always on top<br />
+					<INPUT TYPE=CHECKBOX NAME="refresh" onClick=\"set_refresh(this.checked)\">Auto-refresh
+				</form>
+			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)
 
 def user_effic(user):
 	""" Efficiency for the running user
@@ -165,7 +184,9 @@ def convert_to_gb (kbmem):
 		return mem
 
 def fill_user_list (jobs):
-	users={}
+	""" ???
+	\todo Understand this function...
+	"""
 	for name, atts in jobs.items():
 		if 'job_state' in atts:
 			job_type = atts['job_state'][0]
@@ -188,42 +209,44 @@ def fill_user_list (jobs):
 	return users
 		   
 def print_user_summary(users):
-	print "<table class='example table-sorted-desc table-autosort:1 table-stripeclass:alternate user_summary' >"
-	print "<caption>Users</caption>"
-	print "<thead><tr>",
-	print "<th class='table-filterable table-sortable:default' align='left'>User</th>"
-#	print "<th class='table-filterable table-sorted-desc table-sortable:numeric'>Jobs</th>"
+	""" Prints the users summary
+	\param users The user list
+	"""
+	print '''				<table class='example table-sorted-desc table-autosort:1 table-stripeclass:alternate user_summary' >
+					<caption>Users</caption>
+					<thead><tr>
+						<th class='table-filterable table-sortable:default' align='left'>User</th>'''
 	totals={}
 
 	for state in JOB_STATES:
-		print "<th class='table-filterable table-sorted-desc table-sortable:numeric'>%s</th>" % state
+		print "						<th class='table-filterable table-sorted-desc table-sortable:numeric'>%s</th>" % state
 		totals[state]=0
-	print "<th class='table-sortable:numeric'>Efficiency</th>"
-	print "</tr></thead>"
+	print "						<th class='table-sortable:numeric'>Efficiency</th>"
+	print "					</tr></thead>"
 
-	total=0
+	total = 0
 	for user, atts in users.items():
-		njobs='0'
+		njobs = '0'
 		if 'jobs' in atts.keys():
-			njobs=atts['jobs']
-			total=total+njobs
-		   
-
-			print "<tr><td onMouseOver='highlight(\"%s\")' onMouseOut='dehighlight(\"%s\")'title='%s'>%s</td>" % (user,user,get_dn(user),user)
+			njobs = atts['jobs']
+			total += njobs
+			
+			print '''					<tr>
+						<td onMouseOver='highlight(\"%s\")' onMouseOut='dehighlight(\"%s\")'title='%s'>%s</td>''' % (user,user,get_dn(user),user)
 			for state in JOB_STATES:
-				print "<td>%d</td>" % atts[state]
-				totals[state]=totals[state]+atts[state]
-			print "<td>%.0f</td>" % user_effic(user)
-			print "</tr>"
+				print "						<td>%d</td>" % atts[state]
+				totals[state] += atts[state]
+			print "						<td>%.0f</td>" % user_effic(user)
+			print "					</tr>"
 
 
 
-	print "<tfoot><tr><td><b>Total</b></td>"
+	print '''					<tfoot><tr>
+						<td><b>Total</b></td>'''
 	for state in JOB_STATES:
-		print "<td>%s</td>" % totals[state]
-	print "</tr>"
-	print '''</tfoot>'''
-	print "</table>"
+		print "						<td>%s</td>" % totals[state]
+	print "					</tr></tfoot>"
+	print "				</table>"
 	
 def print_node_summary(nodes):
 	""" Print summary of all nodes information as a table.
@@ -236,70 +259,80 @@ def print_node_summary(nodes):
 	- Total: all the nodes
 	\param nodes The nodes...
 	"""
-	print "<table class='example table-sorted-desc table-autosort:1 node_summary'>"
-	print "<caption>Nodes</caption>"
-	print "<thead><tr>",
+	print "				<table class='example table-sorted-desc table-autosort:1 node_summary'>"
+	print "					<caption>Nodes</caption>"
+	print "					<thead><tr>"
 
-	totals={}
+	totals = {}
 
-	print "<th class='table-filterable table-sortable:default' align='left'>State</th>"
-	print "<th class='table-filterable table-sorted-desc table-sortable:numeric'>Count</th>"
+	print "						<th class='table-filterable table-sortable:default' align='left'>State</th>"
+	print "						<th class='table-filterable table-sorted-desc table-sortable:numeric'>Count</th>"
 	for s in NODE_STATES:
-		totals[s]=0
+		totals[s] = 0
 
-
-	print "</tr></thead>"
+	print "					</tr></thead>"
 	for name, node in nodes.items():
 		if 'state' in node.keys():
-			totals[node['state'][0]]=totals[node['state'][0]]+1
+			totals[node['state'][0]] += 1
 
-	total=0
+	total = 0
 	for s in NODE_STATES:
-		tdclass=s
+		tdclass = s
 		if (s == "down,job-exclusive"):
 			tdclass="down"
-		print "<tr><td class='%s'>%s</td><td class='%s'>%d</td></tr>" %(tdclass,s,tdclass,totals[s])
-		total=total+totals[s]
-	print "<tfoot><tr><td><b>Total</b></td><td>%d</td></tr></tfoot>" %total
-	print "</table>"
+		print '''					<tr>
+						<td class='%s'>%s</td>
+						<td class='%s'>%d</td>
+					</tr>''' %(tdclass,s,tdclass,totals[s])
+		total += totals[s]
+	print '''					<tfoot><tr>
+						<td><b>Total</b></td>
+						<td>%d</td>
+					</tr></tfoot>''' %total
+	print "				</table>"
 
 
 def print_queue_summary(queues):
-	print "<table class='example table-sorted-desc table-autosort:1 table-stripeclass:alternate queue_summary'>"
-	print "<caption>Queues</caption>"
-
-	print "<thead><tr>"
-	headers=['Running','Queued','Held']
-	print "<th class='table-filterable table-sortable:default' align='left'>Name</th>"
+	""" Print the queue summary table
+	"""
+	print '''				<table class='example table-sorted-desc table-autosort:1 table-stripeclass:alternate queue_summary'>
+					<caption>Queues</caption>
+					<thead><tr>'''
+	
+	headers = ['Running','Queued','Held']
+	print "						<th class='table-filterable table-sortable:default' align='left'>Name</th>"
+	
 	totals={}
 	for h in headers:
-		totals[h]=0
+		totals[h] = 0
 	
 	for header in headers:
-		print "<th class='table-filterable table-sortable:numeric'>",header,"</th>"
-	print "</tr></thead>"
+		print "						<th class='table-filterable table-sortable:numeric'>",header,"</th>"
+	print "					</tr></thead>"
+	
 	for queue, atts in queues.items():
-		print "<tr>",
-		print "<td>",queue, "</td>",
+		print "					<tr>"
+		print "						<td>",queue, "</td>"
 
-		state=atts['state_count'][0]
+		state = atts['state_count'][0]
 		state_counts = state.split()
-		statedict={}
+		statedict = {}
 		for entry in state_counts:
 			type,count=entry.split(":")
-			statedict[type]=count
+			statedict[type] = count
 
 
 		for s in headers:
-			print "<td align='right'>",statedict[s],"</td>",
-			totals[s]=totals[s]+int(statedict[s])
+			print "						<td align='right'>",statedict[s],"</td>"
+			totals[s] += int(statedict[s])
 			
-		print "</tr>"
-	print "<tfoot><tr><td><b>Total</b></td>",
+		print "					</tr>"
+	print '''					<tfoot><tr>
+						<td><b>Total</b></td>'''
 	for h in headers:
-		print "<td align='right'>%d</td> " %(totals[h])
-	print "</tr></tfoot>"
-	print "</table>"
+		print "						<td align='right'>%d</td> " %(totals[h])
+	print "					</tr></tfoot>"
+	print "				</table>"
 
 def print_key_table():
 
@@ -316,9 +349,13 @@ def print_lame_list(nodelist):
 	""" Show list of of all the lame
 	\param nodelist The list of all nodes (unsorted)
 	"""
-	print "<table style='margin-top:20px'  class=\" table-autosort:0 node_grid\"><tr>"
+	print '''	<table style='margin-top:20px'  class=\" table-autosort:0 node_grid\">
+		<tr>'''
 	count = 0
 	def nsort(l):
+		""" Sort lames by number
+		\param l The list of the lames
+		"""
 		ret = []
 		for el in l:
 			# Split each node in a dict of letter and figures
@@ -330,180 +367,171 @@ def print_lame_list(nodelist):
 		ret.sort()
 		return [x[1] for x in ret]
 	
+	# Sort lame in the order
 	nodelist = nsort(nodelist)
+	if DEBUG:
+		print "<!-- ",nodelist,"-->"
+
 	for name in nodelist:
 		if name in nodes:
-			node=nodes[name]
+			node = nodes[name]
 			attdict={}
 			if 'status' in node.keys():
 				attdict = node['status']
-	
-	#			attrslist=node['status'][0].split(',')
-	
-	#			for attr in attrslist:
-	#				attname,attvalue=attr.split('=')
-	#				attdict[attname]=attvalue
-	#			print attdict
 			
 		if 'state' in node.keys():
-			node_state=node['state'][0]
+			node_state = node['state'][0]
 	
 			if True: #'jobs' in node.keys():
 				if 'jobs' in node.keys():
-					myjobs=node['jobs']
+					myjobs = node['jobs']
 				else:
-					myjobs=[]
-				nusers='0'
-				physmem=0.0
+					myjobs = []
+				nusers = '0'
+				physmem = 0.0
 	
 				if 'nusers' in attdict:
-					nusers=attdict['nusers'][0]
+					nusers = attdict['nusers'][0]
 	
 				if 'physmem' in attdict:
-					physmem=convert_to_gb(attdict['physmem'][0])			
+					physmem = convert_to_gb(attdict['physmem'][0])			
 	
-				loadave="n/a"
+				loadave = "n/a"
 				if 'loadave' in attdict:
-					loadave=attdict['loadave'][0]
+					loadave = attdict['loadave'][0]
 				
 				# if (njobs == -1) or len(myjobs)== njobs:
 				if True:
 			# define cell bg color based on state
-					if (node_state == 'free' and (len(myjobs)>0)):
-						node_state='partfull'
+					if (node_state == 'free' and (len(myjobs) > 0)):
+						node_state = 'partfull'
 					if (node_state == 'down,job-exclusive'):
-						node_state='down'
-					print "<td valign='top'>" 
-	#				print "<b>%s</b>" %name
-					print '''<form class='%s'><b>%s
-	<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\',
-	this.checked)\"><font size=\'2\'>Show jobs</b>''' % (node_state,name, name)
-					print "<br>%d jobs, %s users, %.2f GB, %s load</font></b></form>" % (len(myjobs),nusers,physmem,loadave)
-					print "<span class='jobdata' id='"+name+"' style='display:block'>"
+						node_state = 'down'
+					print "			<td valign='top'>"
+					print '''				<form class='%s'>
+					<b>%s<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\', this.checked)\"><font size=\'2\'>Show jobs</font></b><br />''' % (node_state,name, name)
+					print '''					%d jobs, %s users, %.2f GB, %s load
+				</form>''' % (len(myjobs),nusers,physmem,loadave)
+					print "				<span class='jobdata' id='"+name+"' style='display:block'>"
+					
 					for myjobstr in myjobs:
-						myjobstr=myjobstr.lstrip()
-						cpu,jid=myjobstr.split('/')
-						jidshort=jid.split('.')[0]
-						myjob=jobs[jid]
-						ownershort=myjob['Job_Owner'][0].split('@')[0]
+						myjobstr = myjobstr.lstrip()
+						cpu,jid = myjobstr.split('/')
+						jidshort = jid.split('.')[0]
+						myjob = jobs[jid]
+						ownershort = myjob['Job_Owner'][0].split('@')[0]
 						if not ownershort in users:
-							users[ownershort]={}
-							users[ownershort]['jobs']=1
+							users[ownershort] = {}
+							users[ownershort]['jobs'] = 1
 						else:
-							users[ownershort]['jobs']=users[ownershort]['jobs']+1
-						mem=0.0
-						memreq=0.0
-						cput=0.0
-						walltime=1.0
-						effic=0.0
+							users[ownershort]['jobs'] += 1
+						mem = 0.0
+						memreq = 0.0
+						cput = 0.0
+						walltime = 1.0
+						effic = 0.0
 						if 'resources_used.mem' in myjob.keys():
-							mem=convert_to_gb(myjob['resources_used.mem'])
+							mem = convert_to_gb(myjob['resources_used.mem'])
 						if  'Resource_List.pmem' in myjob.keys():
-							memreq=convert_to_gb(myjob['Resource_List.pmem'])
+							memreq = convert_to_gb(myjob['Resource_List.pmem'])
 	
 						if 'resources_used.cput'  in myjob:
-							cput=convert_time(myjob['resources_used.cput'])
+							cput = convert_time(myjob['resources_used.cput'])
 	
 						if 'resources_used.walltime'  in myjob:
-							walltime=convert_time(myjob['resources_used.walltime'])		
+							walltime = convert_time(myjob['resources_used.walltime'])		
 						if 'queue' in myjob:
-							myqueue=myjob['queue'][0]
+							myqueue = myjob['queue'][0]
 	
 						if walltime != 0.0:
-							effic=float(cput)/float(walltime)
+							effic = float(cput)/float(walltime)
 	
 						wrap=" "
-	
-	#						wrap="\n</tr>\n<tr>"
-						print "<span title='"+jidshort+": "+myqueue+"'>"+cpu+ ": "+jidshort+ "</span>",
+						print "					<span title='"+jidshort+": "+myqueue+"'>"+cpu+ ": "+jidshort+ "</span>"
 	
 						# user info
-						ownerdn=get_dn(ownershort)
+						ownerdn = get_dn(ownershort)
 							
-						print "<span class= '%s' title='%s'> %-9s</span>" %(ownershort,ownerdn,ownershort),
-	
-						print "<span title='%s/%s s'>" % (cput, walltime),
+						print "					<span class= '%s' title='%s'> %-9s</span>" %(ownershort,ownerdn,ownershort)
+						print "					<span title='%s/%s s'>" % (cput, walltime)
 						if effic < .8:
-							print "<font color='gray'>",
+							print "						<font color='gray'>",
 						else:
 							if effic > 1.0:
-								print "<font color='red'>",
+								print "						<font color='red'>",
 							else:
-								print "<font color='black'>",
+								print "						<font color='black'>",
 								
-						print "%7.2f%%</font> " % (effic*100.0),
-						print "</span>",
+						print "%7.2f%%</font> " % (effic*100.0)
+						print "					</span>"
 						
 	# Try and except to test if the user has defined mem in script
 						try:
 							if mem > memreq and memreq > 0.0:
-								print "<font color='red'>",
+								print "					<font color='red'>",
 							else:
 								if mem < 0.5*memreq:
-									print "<font color='gray'>",
+									print "					<font color='gray'>",
 								else:
-									print "<font color='black'>",
+									print "					<font color='black'>",
 	
 						except:
 							memreq = 0.0
-							print "<font color='black'>",
+							print "					<font color='black'>",
 						
 	
-						print "%.2f/%.2f GB</font>" %(mem,memreq)
-					print "</span>"
-					print "</td>"
-				if (count and ((count%GRID_COLS))==GRID_COLS-1):
-					print "<!-- ",count,"!-->\n"
-					print "</tr>\n<tr>\n"
+						print "%.2f/%.2f GB</font>" %(mem,memreq),
+						print "<br />\n"
+					print "				</span> <!-- class='jobdata' -->"
+					print "			</td>"
+				if (count and ((count%GRID_COLS)) == GRID_COLS-1):
+					if DEBUG:
+						print "<!-- ",count,"!-->\n"
+					print "		</tr>\n\t\t<tr>\n"
 				count += 1
 	
-	print "</table>"
+	print "	</table> <!-- class=\" table-autosort:0 node_grid\" -->"
 
 
 def print_job_list():
 	print
 	print "<!-- Job List -->"
-	print
-	print "<table class='example table-sorted-asc table-autosort:0 joblist'>"
-	print "<caption>Jobs</caption>"
-	print "<thead><tr>"
-	print "<th class='table-sortable:default'>Job ID</th>"
-	print "<th class='table-sortable:default'>Username</th>"
-	print "<th class='table-sortable:default'>Queue</th>"
-	print "<th class='table-sortable:default'>Jobname</th>"
-	print "<th class='table-sortable:numeric'>Nodes</th>"
-	#print "<th>Tasks</th>"
-	print "<th class='table-sortable:default'>State</th>"
-	print "<th class='table-sortable:numeric'>Elapsed Time</th>"
-	print "</tr></thead>"
+	print "	<table class='example table-sorted-asc table-autosort:0 joblist'>"
+	print "		<caption>Jobs</caption>"
+	print "		<thead><tr>"
+	print "			<th class='table-sortable:default'>Job ID</th>"
+	print "			<th class='table-sortable:default'>Username</th>"
+	print "			<th class='table-sortable:default'>Queue</th>"
+	print "			<th class='table-sortable:default'>Jobname</th>"
+	print "			<th class='table-sortable:numeric'>Nodes</th>"
+	print "			<th class='table-sortable:default'>State</th>"
+	print "			<th class='table-sortable:numeric'>Elapsed Time</th>"
+	print "		</tr></thead>"
 	
-	print "<tbody>"
+	print "		<tbody>"
 	for name,job in jobs.items():
 		owner = job['Job_Owner'][0]
-		print "<!-- DEBUG: ",owner.split('@')[0],"-->"
-		print "<tr>"
-		print "<td>",name.split('.')[0],"</td>"
-		print "<td>",owner.split('@')[0],"</td>"
-		print "<td>",job['queue'][0],"</td>"
-		print "<td>",job['Job_Name'][0],"</td>"
+		if DEBUG:
+			print "<!-- DEBUG: ",owner.split('@')[0],"-->"
+		print "			<tr>"
+		print "				<td>",name.split('.')[0],"</td>"
+		print "				<td>",owner.split('@')[0],"</td>"
+		print "				<td>",job['queue'][0],"</td>"
+		print "				<td>",job['Job_Name'][0],"</td>"
 		if job['Resource_List'].has_key('nodect'):
-			print "<td>",job['Resource_List']['nodect'][0],"</td>"
+			print "				<td>",job['Resource_List']['nodect'][0],"</td>"
 		else:
-			print "<td></td>"
-		print "<td>",job['job_state'][0],"</td>"
-	#	if job['job_state'][0] == "R":
-	#		print "<td>",job['resources_used']['walltime'][0],"</td>"
-	#	else:
-	#		print "<td></td>"
+			print "				<td></td>"
+		print "				<td>",job['job_state'][0],"</td>"
 		try:
 			walltime = job['resources_used']['walltime'][0]
-			print "<td>",walltime,"</td>"
+			print "				<td>",walltime,"</td>"
 		except:
-			print "<td></td>"
+			print "				<td></td>"
 	
-		print "</tr>"
+		print "			</tr>"
 	
-	print "</tbody></table>"
+	print "		</tbody>\n\t</table>"
 
 ######################
 # Start of pbswebmon #
@@ -529,82 +557,66 @@ except:
 	sys.exit(1)
 
 for opt in serveropts:
-	if opt[0]=='name':
+	if opt[0] == 'name':
 		server=opt[1] 
 
 for opt in gridopts:
-	if opt[0]=='translate_dns':
-		translate_dns=opt[1]
-	if opt[0]=='gridmap':
-		gridmap=opt[1]
+	if opt[0] == 'translate_dns':
+		translate_dns = opt[1]
+	if opt[0] == 'gridmap':
+		gridmap = opt[1]
 
 print "Content-Type: text/html\n\n"	 # HTML is following
 try:
-	p=PBSQuery(server)
-	nodes=p.getnodes()
-	jobs=p.getjobs()
-	queues=p.getqueues()
+	p = PBSQuery(server)
+	nodes = p.getnodes()
+	jobs = p.getjobs()
+	queues = p.getqueues()
 except PBSError, e:
 	print "<h3>Error connecting to PBS server:</h3><tt>",e,"</tt>"
-	print "<p>Please check configuration in ",CONFIG_FILE, "</p>"
+	print "<p>Please check configuration in ", CONFIG_FILE, "</p>"
 	sys.exit(1)
 
 # Print the header
 header()
 print '''
-<body>
-
-'''
-
-
-users={}
+<body>'''
 
 if translate_dns == 'yes':
-	userdnmap=get_poolmapping(gridmap)
+	userdnmap = get_poolmapping(gridmap)
 else:
-	userdnmap={}
+	userdnmap = {}
 
 if len(nodelist) == 0:
 	nodelist=nodes.keys()
 	nodelist.sort()
 
+# Print the cluster status table
+print_summary()
 
-
-
-print "<div class='summary_box'>"
-print "<table class='summary_box_table'><tr class='summary_box_entry'><td>"
-
-print "<b>Cluster status</b><br/>%s<br/>Refreshes every %s seconds." % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)
-
-print '''<form class="showdetails">
-<INPUT TYPE=CHECKBOX NAME="showdetails" CHECKED  onClick=\"show_hide_data(\'jobdata\',
-this.checked)\">\nShow all job details\n
-<br>
-<INPUT TYPE=CHECKBOX NAME="Fixed header" CHECKED  onClick=\"on_top(\'summary_box\',
-this.checked)\">\nHeader always on top\n
-<br>
-<INPUT TYPE=CHECKBOX NAME="refresh" onClick=\"set_refresh(this.checked)\">\nAuto-refresh\n
-
-
-
-</form>'''
-
-
-print "</td>"
-
-print "<td>"
-users=fill_user_list(jobs)
+# Print the user status table
+print "			<td>"
+users = fill_user_list(jobs)
 print_user_summary(users)
-print "</td><td>"
+print "			</td>"
+
+# Print the queues status table
+print "			<td>"
 print_queue_summary(queues)
-print "</td><td>"
+print "			</td>"
+
+# print the nodes status table
+print "			<td>"
 print_node_summary(nodes)
-print "</td></tr></table>"
-print "</div>"
+print '''			</td>
+		</tr>
+	</table>
+</div> <!-- class='summary_box' -->
+'''
 
 #print "<br clear='all' style=\"clear: inherit;\">"
 #print "<p></p>"
-print "<div style=\"display: block;\">"
+#print "<div>"
 
 # Show all lame and informations
 if DEBUG:
@@ -614,7 +626,7 @@ print_lame_list(nodelist)
 # Show all jobs
 print_job_list()
 
-print"</div>"
+#print"</div>"
 
-print"</body></html>"
+print"</body>\n</html>"
 
