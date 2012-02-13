@@ -446,25 +446,25 @@ def print_lame_list(nodelist, nodes):
 							print "<!-- DEBUG myjob['Resource_List']:",myjob['Resource_List'],"-->"
 							print "<!-- DEBUG myjob['resources_used']['mem']:",type(myjob['resources_used']['mem'][0]),"-->"
 							print "<!-- DEBUG myjob['Walltime']['Remaining'][0]:",myjob['Walltime']['Remaining'][0],"-->"
-						if 'resources_used' in myjob.keys():
+						if myjob.has_key('resources_used'):
 							mem = convert_to_gb(myjob['resources_used']['mem'][0])
 							if DEBUG:
-								print "<!-- DEBUG mem:",mem,"-->"	
-						if  'mem' in myjob['Resource_List'].keys():
+								print "<!-- DEBUG mem:",mem,"-->"
+						if  myjob['Resource_List'].has_key('mem'):
 							memreq = convert_to_gb(myjob['Resource_List']['mem'][0])
 	
-						if 'walltime' in myjob['Resource_List'].keys():
+						if myjob['Resource_List'].has_key('walltime'):
 							walltime = convert_time(myjob['Resource_List']['walltime'][0])
 							if DEBUG:
 								print "<!-- DEBUG walltime:",walltime,"-->"	
 	
-						if 'Remaining' in myjob['Walltime'].keys():
+						if myjob['Walltime'].has_key('Remaining'):
 							# cput = walltime - remaining
 							cput = int(walltime) - int(myjob['Walltime']['Remaining'][0])
 							if DEBUG:
 								print "<!-- DEBUG cput:",cput,"-->"	
 							
-						if 'queue' in myjob:
+						if myjob.has_key('queue'):
 							myqueue = myjob['queue'][0]
 	
 						if walltime != 0.0:
@@ -533,19 +533,41 @@ def print_job_list():
 	print "			<th class='table-sortable:default'>State</th>"
 	print "			<th class='table-sortable:numeric'>Elapsed Time</th>"
 	print "		</tr></thead>"
-	
 	print "		<tbody>"
+		
 	for name,job in jobs.items():
 		owner = job['Job_Owner'][0]
 		if DEBUG:
-			print "<!-- DEBUG: ",owner.split('@')[0],"-->"
+			print "<!-- DEBUG owner.split: ",owner.split('@')[0],"-->"
+			print "<!-- DEBUG job: ",job,"-->"
+		if job['job_state'][0] == 'R':
+			exec_host = job['exec_host'][0]
+			exec_host = exec_host.split('+')
+			# Add a first fictive element in all_hosts and all_cpu
+			all_hosts =  ['a']
+			all_cpu= ['a']
+			for ele in range(len(exec_host)):
+				host,cpu = exec_host[ele].split('/')
+				for all_ele in 0 or range(len(all_hosts)):
+					if not (host in all_hosts):
+						all_hosts.append(host)
+				#all_hosts.append(cpu)
+			# Remove first ficitive element
+			all_hosts.pop(0)
+			if DEBUG:
+				print "<!-- DEBUG all_hosts: ",all_hosts,"-->"
 		print "			<tr>"
 		print "				<td>",name.split('.')[0],"</td>"
 		print "				<td>",owner.split('@')[0],"</td>"
 		print "				<td>",job['queue'][0],"</td>"
 		print "				<td>",job['Job_Name'][0],"</td>"
 		if job['Resource_List'].has_key('nodect'):
-			print "				<td>",job['Resource_List']['nodect'][0],"</td>"
+			if job['job_state'][0] == 'R':
+				str_hosts = ", ".join(all_hosts)
+				print "<!-- DEBUG str_hosts: ",str_hosts,"-->"
+				print "				<td>"+job['Resource_List']['nodect'][0]+" ("+str_hosts+")</td>"
+			else:
+				print "				<td>"+job['Resource_List']['nodect'][0]+"</td>"
 		else:
 			print "				<td></td>"
 		print "				<td>",job['job_state'][0],"</td>"
@@ -648,6 +670,7 @@ print '''			</td>
 if DEBUG:
 	print "<!-- ",nodelist,"-->"
 print_lame_list(nodelist, nodes)
+print "<p></p>"
 
 # Show all jobs
 print_job_list()

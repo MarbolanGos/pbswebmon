@@ -22,7 +22,7 @@ table.fieldsel td, table.fieldsel th {
 }
 
 .jobdata {
-    white-space:pre;
+    /*white-space:pre;*/
     font-size:0.7em;
     font-family:monospace;
     padding:0px;
@@ -69,39 +69,41 @@ table.user_summary {
    font-size:0.7em;
 
 }
+
+/*div.header {
+   position:relative;
+   width: 100%;
+   height: 16em;
+   margin: 0;
+   padding: 0;
+}*/
+   
 div.summary_box {
-   position:fixed;
-   height:350px;
-   /*overflow:auto;*/
-   width:100%; 
+   position: fixed;
+   top: 0px;
+   left: 0px;
+   overflow:auto;
    background-color:white;
-  z-index:1000;
-
-   width:100%; 
- 
-
-
+   z-index: 1;
+   width: 100%;
+   margin: 5px;
+   padding: 0px;
 }
+
 table.summary_box_table {
    vertical-align:top;
-   border-spacing:50px 0px;
+   border-spacing:1em 0px;
    margin-left:auto;
    margin-right:auto;
-   padding-bottom:50px;
-   margin-top:-10px;
+   /*padding-bottom:50px;*/
+   /*margin-top:-10px;*/
    background-color:white;
-   padding-top:10px;
+   /*padding-top:10px;*/
    width:100%;
 }
 table.node_grid {
-   top:450px;
-   position:absolute;
-   margin-left:auto;
-   margin-right:auto;
-/*   border-collapse:collapse; */
-/*   border:solid 1px;*/
+   margin: auto;
 }
-
 
 table.node_grid td             { 
    border:1px solid #aaaaaa;
@@ -109,13 +111,19 @@ table.node_grid td             {
 
 }
 
-.summary_box_entry {
-   vertical-align:top;
-   
-
+table.joblist {
+   margin: auto;
 }
 
+.summary_box_entry {
+   vertical-align:top;
+}
 
 caption {
     font-weight:bold;
 }
+
+.medium {
+   font-size:0.8em;
+}
+
