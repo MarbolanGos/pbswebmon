@@ -168,7 +168,7 @@ def convert_time (timestr):
 	return seconds
 	
 def convert_to_gb (kbmem):
-	""" Convert kilobytes of memory to gigabytes
+	""" Convert kilobytes or megabytes of memory to gigabytes
 	\param kbmem The amount of memory in kB
 	\return mem The amount of memory in GB
 	"""
@@ -345,7 +345,7 @@ def print_key_table():
 
 	print "</table>"
 
-def print_lame_list(nodelist):
+def print_lame_list(nodelist, nodes):
 	""" Show list of of all the lame
 	\param nodelist The list of all nodes (unsorted)
 	"""
@@ -370,7 +370,8 @@ def print_lame_list(nodelist):
 	# Sort lame in the order
 	nodelist = nsort(nodelist)
 	if DEBUG:
-		print "<!-- ",nodelist,"-->"
+		print "<!-- DEBUG nodelist: ",nodelist,"-->"
+		print "<!-- DEBUG nodes: ",nodes,"-->"
 
 	for name in nodelist:
 		if name in nodes:
@@ -385,6 +386,8 @@ def print_lame_list(nodelist):
 			if True: #'jobs' in node.keys():
 				if 'jobs' in node.keys():
 					myjobs = node['jobs']
+					if DEBUG:
+						print "<!-- DEBUG myjobs:",myjobs,"-->"
 				else:
 					myjobs = []
 				nusers = '0'
@@ -392,13 +395,19 @@ def print_lame_list(nodelist):
 	
 				if 'nusers' in attdict:
 					nusers = attdict['nusers'][0]
+					if DEBUG:
+						print "<!-- DEBUG nusers:",nusers,"-->"
 	
 				if 'physmem' in attdict:
-					physmem = convert_to_gb(attdict['physmem'][0])			
+					physmem = convert_to_gb(attdict['physmem'][0])	
+					if DEBUG:
+						print "<!-- DEBUG physmem:",physmem,"-->"		
 	
 				loadave = "n/a"
 				if 'loadave' in attdict:
 					loadave = attdict['loadave'][0]
+					if DEBUG:
+						print "<!-- DEBUG loadave:",loadave,"-->"	
 				
 				# if (njobs == -1) or len(myjobs)== njobs:
 				if True:
@@ -430,21 +439,36 @@ def print_lame_list(nodelist):
 						cput = 0.0
 						walltime = 1.0
 						effic = 0.0
-						if 'resources_used.mem' in myjob.keys():
-							mem = convert_to_gb(myjob['resources_used.mem'])
-						if  'Resource_List.pmem' in myjob.keys():
-							memreq = convert_to_gb(myjob['Resource_List.pmem'])
+						if DEBUG:
+							print "<!-- DEBUG myjob.keys:",myjob.keys(),"-->"
+							print "<!-- DEBUG myjob['Resource_List']:",myjob['Resource_List'],"-->"
+							print "<!-- DEBUG myjob['resources_used']['mem']:",type(myjob['resources_used']['mem'][0]),"-->"
+							print "<!-- DEBUG myjob['Walltime']['Remaining'][0]:",myjob['Walltime']['Remaining'][0],"-->"
+						if 'mem' in myjob['resources_used'].keys():
+							mem = convert_to_gb(myjob['resources_used']['mem'][0])
+							if DEBUG:
+								print "<!-- DEBUG mem:",mem,"-->"	
+						if  'mem' in myjob['Resource_List'].keys():
+							memreq = convert_to_gb(myjob['Resource_List']['mem'][0])
 	
-						if 'resources_used.cput'  in myjob:
-							cput = convert_time(myjob['resources_used.cput'])
+						if 'walltime' in myjob['Resource_List'].keys():
+							walltime = convert_time(myjob['Resource_List']['walltime'][0])
+							if DEBUG:
+								print "<!-- DEBUG walltime:",walltime,"-->"	
 	
-						if 'resources_used.walltime'  in myjob:
-							walltime = convert_time(myjob['resources_used.walltime'])		
+						if 'Remaining' in myjob['Walltime'].keys():
+							# cput = walltime - remaining
+							cput = int(walltime) - int(myjob['Walltime']['Remaining'][0])
+							if DEBUG:
+								print "<!-- DEBUG cput:",cput,"-->"	
+							
 						if 'queue' in myjob:
 							myqueue = myjob['queue'][0]
 	
 						if walltime != 0.0:
 							effic = float(cput)/float(walltime)
+							if DEBUG:
+								print "<!-- DEBUG effic:",effic,"-->"	
 	
 						wrap=" "
 						print "					<span title='"+jidshort+": "+myqueue+"'>"+cpu+ ": "+jidshort+ "</span>"
@@ -465,7 +489,7 @@ def print_lame_list(nodelist):
 						print "%7.2f%%</font> " % (effic*100.0)
 						print "					</span>"
 						
-	# Try and except to test if the user has defined mem in script
+						# Try and except to test if the user has defined mem in script
 						try:
 							if mem > memreq and memreq > 0.0:
 								print "					<font color='red'>",
@@ -621,7 +645,7 @@ print '''			</td>
 # Show all lame and informations
 if DEBUG:
 	print "<!-- ",nodelist,"-->"
-print_lame_list(nodelist)
+print_lame_list(nodelist, nodes)
 
 # Show all jobs
 print_job_list()
