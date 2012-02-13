@@ -349,7 +349,7 @@ def print_lame_list(nodelist, nodes):
 	""" Show list of of all the lame
 	\param nodelist The list of all nodes (unsorted)
 	"""
-	print '''	<table style='margin-top:20px'  class=\" table-autosort:0 node_grid\">
+	print '''	<table class=\" table-autosort:0 node_grid\">
 		<tr>'''
 	count = 0
 	def nsort(l):
@@ -374,6 +374,8 @@ def print_lame_list(nodelist, nodes):
 		print "<!-- DEBUG nodes: ",nodes,"-->"
 
 	for name in nodelist:
+		if DEBUG:
+			print "<!-- DEBUG name: ",name,"-->"
 		if name in nodes:
 			node = nodes[name]
 			attdict={}
@@ -444,7 +446,7 @@ def print_lame_list(nodelist, nodes):
 							print "<!-- DEBUG myjob['Resource_List']:",myjob['Resource_List'],"-->"
 							print "<!-- DEBUG myjob['resources_used']['mem']:",type(myjob['resources_used']['mem'][0]),"-->"
 							print "<!-- DEBUG myjob['Walltime']['Remaining'][0]:",myjob['Walltime']['Remaining'][0],"-->"
-						if 'mem' in myjob['resources_used'].keys():
+						if 'resources_used' in myjob.keys():
 							mem = convert_to_gb(myjob['resources_used']['mem'][0])
 							if DEBUG:
 								print "<!-- DEBUG mem:",mem,"-->"	
@@ -476,22 +478,22 @@ def print_lame_list(nodelist, nodes):
 						# user info
 						ownerdn = get_dn(ownershort)
 							
-						print "					<span class= '%s' title='%s'> %-9s</span>" %(ownershort,ownerdn,ownershort)
-						print "					<span title='%s/%s s'>" % (cput, walltime)
+						print "					<span style=\"white-space: pre;\" title='%s'> %-10s</span>" %(ownerdn,ownershort[0:len(ownershort)])
+						print "					<span style=\"white-space: pre;\" title='%s/%s s'>" % (cput, walltime),
 						if effic < .8:
-							print "						<font color='gray'>",
+							print "<font color='gray'>",
 						else:
 							if effic > 1.0:
-								print "						<font color='red'>",
+								print "<font color='red'>",
 							else:
-								print "						<font color='black'>",
+								print "<font color='black'>",
 								
-						print "%7.2f%%</font> " % (effic*100.0)
-						print "					</span>"
+						print "%7.2f%%\t</font> " % (effic*100.0),
+						print "</span>"
 						
 						# Try and except to test if the user has defined mem in script
 						try:
-							if mem > memreq and memreq > 0.0:
+							if (mem > memreq and memreq > 0.0):
 								print "					<font color='red'>",
 							else:
 								if mem < 0.5*memreq:
@@ -501,7 +503,7 @@ def print_lame_list(nodelist, nodes):
 	
 						except:
 							memreq = 0.0
-							print "					<font color='black'>",
+							print "					<font color='blue'>",
 						
 	
 						print "%.2f/%.2f GB</font>" %(mem,memreq),
