@@ -39,12 +39,9 @@ import ConfigParser
 # Input variables
 NODE_STATES=['down','free','job-exclusive','offline','busy','down,offline','down,job-exclusive','state-unknown','down,busy','job-exclusive,busy']
 JOB_STATES=['R','Q','E','C','H','W','T']
-REFRESH_TIME = "30"
 JOB_EFFIC={}
 USER_EFFIC={}
 CONFIG_FILE="/etc/pbswebmon.conf"
-GRID_COLS=4
-DEBUG=False
 njobs=-1
 users={}
 
@@ -359,7 +356,7 @@ def print_lame_list(nodelist, nodes):
 	\param nodelist The list of all nodes (unsorted)
 	\param nodes The nodes information
 	"""
-	print '''	<table class=\" table-autosort:0 node_grid\">
+	print '''	<table class=\"node_grid\">
 		<tr>'''
 	count = 0
 	def nsort(l):
@@ -432,9 +429,9 @@ def print_lame_list(nodelist, nodes):
 				node_state = 'down'
 			print "			<td valign='top'>"
 			print '''				<form class='%s'>
-			<b>%s<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\', this.checked)\"><font size=\'2\'>Show jobs</font></b><br />''' % (node_state,name, name)
+					<b>%s<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\', this.checked)\"><font size=\'2\'>Show jobs</font></b><br />''' % (node_state,name, name)
 			print '''					%d jobs, %s users, %.2f GB, %s load
-		</form>''' % (len(myjobs),nusers,physmem,loadave)
+				</form>''' % (len(myjobs),nusers,physmem,loadave)
 			print "				<span class='jobdata' id='"+name+"' style='display:block'>"
 			
 			for myjobstr in myjobs:
@@ -528,7 +525,8 @@ def print_lame_list(nodelist, nodes):
 				print "		</tr>\n\t\t<tr>\n"
 			count += 1
 	
-	print "	</table> <!-- class=\" table-autosort:0 node_grid\" -->"
+	#print "	</table> <!-- class=\" table-autosort:0 node_grid\" -->"
+	print "	</table> <!-- class=\"node_grid\" -->"
 
 
 def print_job_list():
@@ -545,7 +543,8 @@ def print_job_list():
 	print
 	print "<!-- Job List -->"
 	print "	<table class='example table-sorted-asc table-autosort:0 joblist'>"
-	print "		<caption>Jobs</caption>"
+	print "		<caption>Jobs<br /></caption>"
+	
 	print "		<thead><tr>"
 	print "			<th class='table-sortable:default'>Job ID</th>"
 	print "			<th class='table-sortable:default'>Username</th>"
@@ -588,30 +587,30 @@ def print_job_list():
 			if DEBUG:
 				print "<!-- DEBUG all_hosts: ",all_hosts,"-->"
 		print "			<tr>"
-		print "				<td>",name.split('.')[0],"</td>" # The JOB ID
-		print "				<td>",owner.split('@')[0],"</td>" # The username
-		print "				<td>",job['queue'][0],"</td>" # The queue
-		print "				<td>",job['Job_Name'][0],"</td>" # The jobname
+		print "				<td class=\"JOBID\">",name.split('.')[0],"</td>" # The JOB ID
+		print "				<td class=\"username\">",owner.split('@')[0],"</td>" # The username
+		print "				<td class=\"queue\">",job['queue'][0],"</td>" # The queue
+		print "				<td class=\"jobname\">",job['Job_Name'][0],"</td>" # The jobname
 		if job['Resource_List'].has_key('nodect'):
-			print "				<td>"+job['Resource_List']['nodect'][0]+"</td>" # The number of nodes asked
+			print "				<td class=\"nodes\">"+job['Resource_List']['nodect'][0]+"</td>" # The number of nodes asked
 		if job['job_state'][0] == 'R':
 			str_hosts = ", ".join(all_hosts) # Join the all_hosts list in one string separated with comma
 			if DEBUG:
 				print "<!-- DEBUG str_hosts: ",str_hosts,"-->"
-			print "				<td>"+str_hosts+"</td>" # The running lame
+			print "				<td class=\"lames\">"+str_hosts+"</td>" # The running lame
 		else:
-			print "				<td></td>" # The jobs is not running so no lame to print
-		print "				<td>",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
-		print "				<td>",job['job_state'][0],"</td>" # The job state
+			print "				<td class=\"lames\"></td>" # The jobs is not running so no lame to print
+		print "				<td class=\"cores\">",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
+		print "				<td class=\"state\">",job['job_state'][0],"</td>" # The job state
 		if job['job_state'][0] == 'R':
-			print "				<td>",job['resources_used']['walltime'][0],"</td>" # Get the time elapsed
+			print "				<td class=\"elapsed_time\">",job['resources_used']['walltime'][0],"</td>" # Get the time elapsed
 		else:
-			print "				<td></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
+			print "				<td class=\"elapsed_time\"></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
 		
 		if job['Resource_List'].has_key('walltime'):
-			print "				<td>",job['Resource_List']['walltime'][0],"</td>" # Get the walltime
+			print "				<td class=\"walltime\">",job['Resource_List']['walltime'][0],"</td>" # Get the walltime
 		else:
-			print "				<td></td>"
+			print "				<td class=\"walltime\"></td>"
 			
 		print "			</tr>"
 	
@@ -640,15 +639,21 @@ except:
 	print "Error reading config"
 	sys.exit(1)
 
+# Get options from [server] in /etc/pbswebmon.conf
+DEBUG = False
+REFRESH_TIME = 30
+GRID_COLS = 4
 for opt in serveropts:
-	if opt[0] == 'name':
-		server=opt[1] 
+	if opt[0] == 'name': server = opt[1] # Set the server name
+	if opt[0] == 'debug':
+		if opt[1] == "1": DEBUG = True # Set the DEBUG flag	
+	if opt[0] == 'refresh': REFRESH_TIME = opt[1] # Set the refresh time in seconds
+	if opt[0] == 'gridcols': GRID_COLS = int(opt[1]) # Set the number of columns to display the grid
 
+# Get options from [grid] in /etc/pbswebmon.conf
 for opt in gridopts:
-	if opt[0] == 'translate_dns':
-		translate_dns = opt[1]
-	if opt[0] == 'gridmap':
-		gridmap = opt[1]
+	if opt[0] == 'translate_dns': translate_dns = opt[1]
+	if opt[0] == 'gridmap': gridmap = opt[1]
 
 print "Content-Type: text/html\n\n"	 # HTML is following
 try:

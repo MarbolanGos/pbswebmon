@@ -164,3 +164,34 @@ tr.doc_section {
 	background-color:#dddddd;
 }
 
+/* Jobs table */
+td.JOBID {
+	text-align: center;
+}
+td.username {
+	text-align: left;
+}
+td.queue {
+	text-align: left;
+}
+td.jobname {
+	text-align: left;
+}
+td.nodes {
+	text-align: center;
+}
+td.lames {
+	text-align: left;
+}
+td.cores {
+	text-align: center;
+}
+td.state {
+	text-align: center;
+}
+td.elapsed_time {
+	text-align: center;
+}
+td.walltime {
+	text-align: right;
+}
