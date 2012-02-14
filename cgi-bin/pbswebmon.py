@@ -38,7 +38,7 @@ import ConfigParser
 
 # Input variables
 NODE_STATES=['down','free','job-exclusive','offline','busy','down,offline','down,job-exclusive','state-unknown','down,busy','job-exclusive,busy']
-JOB_STATES=['R','Q','E','C','H','W']
+JOB_STATES=['R','Q','E','C','H','W','T']
 REFRESH_TIME = "30"
 JOB_EFFIC={}
 USER_EFFIC={}
@@ -88,6 +88,7 @@ def print_summary():
 				%s<br />
 				Refreshes every %s seconds. <br />
 				<form class="showdetails">
+					<INPUT TYPE=CHECKBOX NAME="show_node_grid" CHECKED  onClick=\"show_hide_data(\'node_grid\',this.checked,false)\">Show node list<br />
 					<INPUT TYPE=CHECKBOX NAME="showdetails" CHECKED  onClick=\"show_hide_data(\'jobdata\', this.checked)\">Show all job details<br />
 					<INPUT TYPE=CHECKBOX NAME="Fixed header" CHECKED onClick=\"on_top(\'summary_box\', this.checked)\">Header always on top<br />
 					<INPUT TYPE=CHECKBOX NAME="refresh" onClick=\"set_refresh(this.checked)\">Auto-refresh
