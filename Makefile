@@ -28,6 +28,7 @@ install:
 	install -m 644 README $(DESTDIR)/usr/share/doc/pbswebmon/README
 
 doc:
+	mkdir -p documentation
 	doxygen
 
 dist:	
