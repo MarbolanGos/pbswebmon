@@ -91,7 +91,7 @@ def print_summary():
 					<INPUT TYPE=CHECKBOX NAME="show_node_grid" CHECKED  onClick=\"show_hide_data(\'node_grid\',this.checked,false)\">Show node list<br />
 					<INPUT TYPE=CHECKBOX NAME="showdetails" CHECKED  onClick=\"show_hide_data(\'jobdata\', this.checked)\">Show all job details<br />
 					<INPUT TYPE=CHECKBOX NAME="Fixed header" CHECKED onClick=\"on_top(\'summary_box\', this.checked)\">Header always on top<br />
-					<INPUT TYPE=CHECKBOX NAME="refresh" onClick=\"set_refresh(this.checked)\">Auto-refresh
+					<INPUT TYPE=CHECKBOX NAME="refresh" CHECKED onClick=\"set_refresh(this.checked)\">Auto-refresh
 				</form>
 			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)
 
@@ -667,7 +667,7 @@ print '''			</td>
 
 #print "<br clear='all' style=\"clear: inherit;\">"
 #print "<p></p>"
-#print "<div>"
+print "<div class=\"detail_box\">"
 
 # Show all lame and informations
 if DEBUG:
@@ -678,7 +678,7 @@ print "<p></p>"
 # Show all jobs
 print_job_list()
 
-#print"</div>"
+print'''</div>'''
 
 print"</body>\n</html>"
 

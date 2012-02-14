@@ -1,8 +1,26 @@
 // code from 
 // http://www.adp-gmbh.ch/web/js/hiding_column.html
 
+if (document.getElementsByClassName == undefined) {
+        document.getElementsByClassName = function(className)
+        {
+                var hasClassName = new RegExp("(?:^|\\s)" + className + "(?:$|\\s)");
+                var allElements = document.getElementsByTagName("*");
+                var results = [];
 
-function show_hide_data(class, do_show) {
+                var element;
+                for (var i = 0; (element = allElements[i]) != null; i++) {
+                        var elementClass = element.className;
+                        if (elementClass && elementClass.indexOf(className) != -1 && hasClassName.test(elementClass))
+                                results.push(element);
+                }
+
+                return results;
+        }
+}
+
+
+function show_hide_data(myclass, do_show, reset_nodes) {
 
     var stl;
     if (do_show) stl = 'block'
@@ -28,13 +46,13 @@ if (document.getElementsByClassName == undefined) {
 
 
 
-    var elements  = document.getElementsByClassName(class);
+    var elements  = document.getElementsByClassName(myclass);
 
     for (var el=0; el<elements.length;el++) {
 
         elements[el].style.display=stl;
     }
-
+    if (reset_nodes) {
   // set/clear all checkboxes for individual jobs too
   var elements  = document.getElementsByClassName("job_indiv");
 
@@ -42,7 +60,7 @@ if (document.getElementsByClassName == undefined) {
 	
         elements[el].checked=do_show;
   }
-
+    }
 
 
 
@@ -136,12 +154,11 @@ function dehighlight(owner) {
 }
 
 
-
-function on_top(class, on_top) {
+function on_top2(myclass, on_top) {
 
     var stl;
-    if (on_top) stl = 'fixed'
-    else         stl = 'static';
+    if (on_top) stl = '250px' // This value depends on the value in local.css for div.detail_box
+    else        stl = '0px';
 
 if (document.getElementsByClassName == undefined) {
         document.getElementsByClassName = function(className)
@@ -156,16 +173,74 @@ if (document.getElementsByClassName == undefined) {
                         if (elementClass && elementClass.indexOf(className) != -1 && hasClassName.test(elementClass))
                                 results.push(element);
                 }
-
                 return results;
         }
 }
-
-    var elements  = document.getElementsByClassName(class);
-
+    var elements  = document.getElementsByClassName(myclass);
     for (var el=0; el<elements.length;el++) {
+        elements[el].style.paddingTop=stl;
+    }
+}
 
+function on_top(myclass, on_top) {
+
+    var stl;
+    if (on_top) stl = 'fixed'
+    else        stl = 'static';
+
+if (document.getElementsByClassName == undefined) {
+        document.getElementsByClassName = function(className)
+        {
+                var hasClassName = new RegExp("(?:^|\\s)" + className + "(?:$|\\s)");
+                var allElements = document.getElementsByTagName("*");
+                var results = [];
+
+                var element;
+                for (var i = 0; (element = allElements[i]) != null; i++) {
+                        var elementClass = element.className;
+                        if (elementClass && elementClass.indexOf(className) != -1 && hasClassName.test(elementClass))
+                                results.push(element);
+                }
+                return results;
+        }
+}
+    var elements  = document.getElementsByClassName(myclass);
+    for (var el=0; el<elements.length;el++) {
         elements[el].style.position=stl;
     }
+    on_top2('detail_box', on_top)
+}
+
+/* scan through the widgets and read their state */
+function synchronise_options (){
+
+    var indiv_nodes  = document.getElementsByClassName("job_indiv");
+    var details  = document.getElementsByName("show_details");
+    var showdetails=details[0].checked;
+    show_hide_data('jobdata', details[0].checked, false);
+
+    for (var node=0; node<indiv_nodes.length;node++) {
+	mynode=indiv_nodes[node];
+        if (mynode.checked != details[0].checked) {
+	        show_hide_data_id(mynode.name,mynode.checked);
+		      
+	}
+
+       
+	
+    }
+
+
+    /*   fixed_header*/
+    details  = document.getElementsByName("fixed_header");
+    showdetails=details[0].checked;
+    on_top('summary_box',details[0].checked);
+
+
+    /* refresh*/
+    details  = document.getElementsByName("refresh");
+    showdetails=details[0].checked;
+    set_refresh(details[0].checked);
+
 
 }
