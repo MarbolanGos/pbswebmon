@@ -549,7 +549,7 @@ def print_job_list():
 			all_cpu= ['a']
 			for ele in range(len(exec_host)):
 				host,cpu = exec_host[ele].split('/')
-				if True:
+				if DEBUG:
 					print "<!-- DEBUG len(exec_host): ",len(exec_host),"-->"
 				for all_ele in 0 or range(len(all_hosts)):
 					if not (host in all_hosts):
