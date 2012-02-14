@@ -27,6 +27,8 @@ install:
 	install -m 644 pbswebmon.conf $(DESTDIR)/etc/pbswebmon.conf
 	install -m 644 README $(DESTDIR)/usr/share/doc/pbswebmon/README
 
+doc:
+	doxygen
 
 dist:	
 	rm -rf pbswebmon-$(VERSION)
