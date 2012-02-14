@@ -20,6 +20,8 @@
 # Modified by: Marcus Breese <mbreese@iupui.edu>
 #			  2011-02-08
 #			  for pbs_python version 4.1.0
+# \file pbswebmon.py
+# \brief  Web Monitor for PBS
 #
 #
 
@@ -40,7 +42,7 @@ import ConfigParser
 NODE_STATES=['down','free','job-exclusive','offline','busy','down,offline','down,job-exclusive','state-unknown','down,busy','job-exclusive,busy']
 JOB_STATES=['R','Q','E','C','H','W','T']
 JOB_EFFIC={}
-USER_EFFIC={} # Dict containing all users and associated jobs
+USER_EFFIC={}
 CONFIG_FILE="/etc/pbswebmon.conf"
 njobs=-1
 users={}
@@ -94,19 +96,14 @@ def print_summary():
 
 def user_effic(user):
 	""" Efficiency for the running user
-	\param user The string for the user to be parsed
-	\return effic The calculated efficiency (type float)
+	\param user The user to be parsed
+	\return effic The calculated efficiency
 	"""
 	effic = 0.0
-	if USER_EFFIC.has_key(user):
+	if user in USER_EFFIC:
 		for job in USER_EFFIC[user]:
 			effic += job
-			if DEBUG:
-				print "<!-- DEBUG effic job: ",job,"-->"
-		effic = (effic / float(len(USER_EFFIC[user]))*100.0)
-		#effic /= float(len(USER_EFFIC[user]))*100.0
-		if DEBUG:
-			print "<!-- DEBUG effic: ",effic,"-->"
+		effic /= float(len(USER_EFFIC[user]))*100.0
 
 	return effic
 		
@@ -156,19 +153,14 @@ def get_poolmapping(gridmapdir):
 
 def get_dn (ownershort):
 	""" ???
-	\param ownershort The short name for the user
 	\todo Understand this function...
-	\return ownerdn The username
 	"""
 	# user info
 	if ownershort in userdnmap:
-		ownerdn = userdnmap[ownershort]
+		ownerdn=userdnmap[ownershort]
 	else:
-		ownerdn = ownershort
+		ownerdn=ownershort
 
-	if DEBUG:
-		print "<!-- DEBUG ownerdn: ",ownerdn,"-->"
-		print "<!-- DEBUG userdnmap: ",userdnmap,"-->"
 	return ownerdn
 
 def convert_time (timestr):
@@ -239,7 +231,6 @@ def print_user_summary(users):
 	print "					</tr></thead>"
 
 	total = 0
-	tot_effic = 0.0
 	for user, atts in users.items():
 		njobs = '0'
 		if 'jobs' in atts.keys():
@@ -251,10 +242,7 @@ def print_user_summary(users):
 			for state in JOB_STATES:
 				print "						<td>%d</td>" % atts[state]
 				totals[state] += atts[state]
-			tmp_effic = user_effic(user)
-			print "						<td>%.0f</td>" % tmp_effic
-			tot_effic += tmp_effic
-			del tmp_effic
+			print "						<td>%.0f</td>" % user_effic(user)
 			print "					</tr>"
 
 
@@ -262,8 +250,7 @@ def print_user_summary(users):
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
 	for state in JOB_STATES:
-		print "						<td><b>%s</b></td>" % totals[state]
-	print "						<td><b>%.0f</b></td>" %tot_effic
+		print "						<td>%s</td>" % totals[state]
 	print "					</tr></tfoot>"
 	print "				</table>"
 	
@@ -349,7 +336,7 @@ def print_queue_summary(queues):
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
 	for h in headers:
-		print "						<td align='right'><b>%d</b></td> " %(totals[h])
+		print "						<td align='right'>%d</td> " %(totals[h])
 	print "					</tr></tfoot>"
 	print "				</table>"
 
