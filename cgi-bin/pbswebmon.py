@@ -562,7 +562,7 @@ def print_job_list():
 		
 	for name,job in jobs.items():
 		owner = job['Job_Owner'][0]
-		if True:
+		if DEBUG:
 			print "<!-- DEBUG owner.split: ",owner.split('@')[0],"-->"
 			print "<!-- DEBUG job: ",job,"-->"
 		
