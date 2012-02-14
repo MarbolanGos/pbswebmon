@@ -10,6 +10,9 @@ separate machine authorised as a client of the head node.
 (To configure the server address, edit the configuration
 file /etc/pbswebmon.conf)
 
+This version has been forked from https://github.com/mbreese/pbswebmon. It is meant to have more information and a more annoted version.
+If you need more options please ask.
+
 Manual installation
 ---
 Put cgi-bin/pbswebmon.py into your CGI directory.
