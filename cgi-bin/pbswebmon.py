@@ -530,7 +530,7 @@ def print_job_list():
 	print "			<th class='table-sortable:default'>Username</th>"
 	print "			<th class='table-sortable:default'>Queue</th>"
 	print "			<th class='table-sortable:default'>Jobname</th>"
-	print "			<th class='table-sortable:numeric'>Nodes</th>"
+	print "			<th class='table-sortable:numeric'>Nodes (lame/cores)</th>"
 	print "			<th class='table-sortable:default'>State</th>"
 	print "			<th class='table-sortable:numeric'>Elapsed Time</th>"
 	print "		</tr></thead>"
@@ -549,10 +549,11 @@ def print_job_list():
 			all_cpu= ['a']
 			for ele in range(len(exec_host)):
 				host,cpu = exec_host[ele].split('/')
+				if True:
+					print "<!-- DEBUG len(exec_host): ",len(exec_host),"-->"
 				for all_ele in 0 or range(len(all_hosts)):
 					if not (host in all_hosts):
 						all_hosts.append(host)
-				#all_hosts.append(cpu)
 			# Remove first ficitive element
 			all_hosts.pop(0)
 			if DEBUG:
@@ -567,7 +568,7 @@ def print_job_list():
 				str_hosts = ", ".join(all_hosts)
 				if DEBUG:
 					print "<!-- DEBUG str_hosts: ",str_hosts,"-->"
-				print "				<td>"+job['Resource_List']['nodect'][0]+" ("+str_hosts+")</td>"
+				print "				<td>"+job['Resource_List']['nodect'][0]+" ("+str_hosts+"/"+str(len(exec_host))+")</td>"
 			else:
 				print "				<td>"+job['Resource_List']['nodect'][0]+"</td>"
 		else:
