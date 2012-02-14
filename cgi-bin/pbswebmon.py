@@ -128,6 +128,9 @@ def job_effic(myjob):
 	return effic
 
 def get_poolmapping(gridmapdir):
+	""" ???
+	\todo Understand this function...
+	"""
 
 	# find files with more than one link in current directory
 	allfiles=os.listdir(gridmapdir)
@@ -150,6 +153,9 @@ def get_poolmapping(gridmapdir):
 	return maptable
 
 def get_dn (ownershort):
+	""" ???
+	\todo Understand this function...
+	"""
 	# user info
 	if ownershort in userdnmap:
 		ownerdn=userdnmap[ownershort]
@@ -170,7 +176,7 @@ def convert_time (timestr):
 	
 def convert_to_gb (kbmem):
 	""" Convert kilobytes or megabytes of memory to gigabytes
-	\param kbmem The amount of memory in kB
+	\param kbmem The amount of memory in kB or MB
 	\return mem The amount of memory in GB
 	"""
 	idx = kbmem.rfind("kb")
@@ -336,6 +342,8 @@ def print_queue_summary(queues):
 	print "				</table>"
 
 def print_key_table():
+	""" This function is yet unused...
+	"""
 
 	print "<table class='key_table'>"
 	print "<tr><th>Node color codes</th></tr>"
@@ -349,6 +357,7 @@ def print_key_table():
 def print_lame_list(nodelist, nodes):
 	""" Show list of of all the lame
 	\param nodelist The list of all nodes (unsorted)
+	\param nodes The nodes information
 	"""
 	print '''	<table class=\" table-autosort:0 node_grid\">
 		<tr>'''
@@ -356,6 +365,7 @@ def print_lame_list(nodelist, nodes):
 	def nsort(l):
 		""" Sort lames by number
 		\param l The list of the lames
+		\return The list of the lames in a sorted way
 		"""
 		ret = []
 		for el in l:
@@ -383,144 +393,155 @@ def print_lame_list(nodelist, nodes):
 			if 'status' in node.keys():
 				attdict = node['status']
 			
-		if 'state' in node.keys():
+		if node.has_key('state'):
 			node_state = node['state'][0]
-	
-			if True: #'jobs' in node.keys():
-				if 'jobs' in node.keys():
-					myjobs = node['jobs']
-					if DEBUG:
-						print "<!-- DEBUG myjobs:",myjobs,"-->"
+			if DEBUG:
+				print "<!-- DEBUG node_state: ",node_state ,"-->"
+
+			if node.has_key('jobs'):
+				myjobs = node['jobs']
+				if DEBUG:
+					print "<!-- DEBUG myjobs:",myjobs,"-->"
+			else:
+				myjobs = []
+
+			# get the number of users
+			nusers = '0' # this is a string!
+			if attdict.has_key('nusers'):
+				nusers = attdict['nusers'][0]
+				if DEBUG:
+					print "<!-- DEBUG nusers:",nusers,"-->"
+
+			# get the physical memory and convert to GB
+			physmem = 0.0
+			if attdict.has_key('physmem'):
+				physmem = convert_to_gb(attdict['physmem'][0])	
+				if DEBUG:
+					print "<!-- DEBUG physmem:",physmem,"-->"		
+			
+			# Get the Load Average
+			loadave = "n/a"
+			if attdict.has_key('loadave'):
+				loadave = attdict['loadave'][0]
+				if DEBUG:
+					print "<!-- DEBUG loadave:",loadave,"-->"	
+			
+			if (node_state == 'free' and (len(myjobs) > 0)):
+				node_state = 'partfull'
+			if (node_state == 'down,job-exclusive'):
+				node_state = 'down'
+			print "			<td valign='top'>"
+			print '''				<form class='%s'>
+			<b>%s<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\', this.checked)\"><font size=\'2\'>Show jobs</font></b><br />''' % (node_state,name, name)
+			print '''					%d jobs, %s users, %.2f GB, %s load
+		</form>''' % (len(myjobs),nusers,physmem,loadave)
+			print "				<span class='jobdata' id='"+name+"' style='display:block'>"
+			
+			for myjobstr in myjobs:
+				myjobstr = myjobstr.lstrip()
+				cpu,jid = myjobstr.split('/')
+				jidshort = jid.split('.')[0]
+				myjob = jobs[jid]
+				ownershort = myjob['Job_Owner'][0].split('@')[0]
+				if not ownershort in users:
+					users[ownershort] = {}
+					users[ownershort]['jobs'] = 1
 				else:
-					myjobs = []
-				nusers = '0'
-				physmem = 0.0
-	
-				if 'nusers' in attdict:
-					nusers = attdict['nusers'][0]
+					users[ownershort]['jobs'] += 1
+				mem = 0.0
+				memreq = 0.0
+				cput = 0.0
+				walltime = 1.0
+				effic = 0.0
+				if DEBUG:
+					print "<!-- DEBUG myjob.keys:",myjob.keys(),"-->"
+					print "<!-- DEBUG myjob['Resource_List']:",myjob['Resource_List'],"-->"
+					print "<!-- DEBUG myjob['resources_used']['mem']:",type(myjob['resources_used']['mem'][0]),"-->"
+					print "<!-- DEBUG myjob['Walltime']['Remaining'][0]:",myjob['Walltime']['Remaining'][0],"-->"
+				if myjob.has_key('resources_used'):
+					mem = convert_to_gb(myjob['resources_used']['mem'][0])
 					if DEBUG:
-						print "<!-- DEBUG nusers:",nusers,"-->"
-	
-				if 'physmem' in attdict:
-					physmem = convert_to_gb(attdict['physmem'][0])	
+						print "<!-- DEBUG mem:",mem,"-->"
+				if  myjob['Resource_List'].has_key('mem'):
+					memreq = convert_to_gb(myjob['Resource_List']['mem'][0])
+
+				if myjob['Resource_List'].has_key('walltime'):
+					walltime = convert_time(myjob['Resource_List']['walltime'][0])
 					if DEBUG:
-						print "<!-- DEBUG physmem:",physmem,"-->"		
-	
-				loadave = "n/a"
-				if 'loadave' in attdict:
-					loadave = attdict['loadave'][0]
+						print "<!-- DEBUG walltime:",walltime,"-->"	
+
+				if myjob['Walltime'].has_key('Remaining'):
+					# cput = walltime - remaining
+					cput = int(walltime) - int(myjob['Walltime']['Remaining'][0])
 					if DEBUG:
-						print "<!-- DEBUG loadave:",loadave,"-->"	
-				
-				# if (njobs == -1) or len(myjobs)== njobs:
-				if True:
-			# define cell bg color based on state
-					if (node_state == 'free' and (len(myjobs) > 0)):
-						node_state = 'partfull'
-					if (node_state == 'down,job-exclusive'):
-						node_state = 'down'
-					print "			<td valign='top'>"
-					print '''				<form class='%s'>
-					<b>%s<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\', this.checked)\"><font size=\'2\'>Show jobs</font></b><br />''' % (node_state,name, name)
-					print '''					%d jobs, %s users, %.2f GB, %s load
-				</form>''' % (len(myjobs),nusers,physmem,loadave)
-					print "				<span class='jobdata' id='"+name+"' style='display:block'>"
+						print "<!-- DEBUG cput:",cput,"-->"	
 					
-					for myjobstr in myjobs:
-						myjobstr = myjobstr.lstrip()
-						cpu,jid = myjobstr.split('/')
-						jidshort = jid.split('.')[0]
-						myjob = jobs[jid]
-						ownershort = myjob['Job_Owner'][0].split('@')[0]
-						if not ownershort in users:
-							users[ownershort] = {}
-							users[ownershort]['jobs'] = 1
-						else:
-							users[ownershort]['jobs'] += 1
-						mem = 0.0
-						memreq = 0.0
-						cput = 0.0
-						walltime = 1.0
-						effic = 0.0
-						if DEBUG:
-							print "<!-- DEBUG myjob.keys:",myjob.keys(),"-->"
-							print "<!-- DEBUG myjob['Resource_List']:",myjob['Resource_List'],"-->"
-							print "<!-- DEBUG myjob['resources_used']['mem']:",type(myjob['resources_used']['mem'][0]),"-->"
-							print "<!-- DEBUG myjob['Walltime']['Remaining'][0]:",myjob['Walltime']['Remaining'][0],"-->"
-						if myjob.has_key('resources_used'):
-							mem = convert_to_gb(myjob['resources_used']['mem'][0])
-							if DEBUG:
-								print "<!-- DEBUG mem:",mem,"-->"
-						if  myjob['Resource_List'].has_key('mem'):
-							memreq = convert_to_gb(myjob['Resource_List']['mem'][0])
-	
-						if myjob['Resource_List'].has_key('walltime'):
-							walltime = convert_time(myjob['Resource_List']['walltime'][0])
-							if DEBUG:
-								print "<!-- DEBUG walltime:",walltime,"-->"	
-	
-						if myjob['Walltime'].has_key('Remaining'):
-							# cput = walltime - remaining
-							cput = int(walltime) - int(myjob['Walltime']['Remaining'][0])
-							if DEBUG:
-								print "<!-- DEBUG cput:",cput,"-->"	
-							
-						if myjob.has_key('queue'):
-							myqueue = myjob['queue'][0]
-	
-						if walltime != 0.0:
-							effic = float(cput)/float(walltime)
-							if DEBUG:
-								print "<!-- DEBUG effic:",effic,"-->"	
-	
-						wrap=" "
-						print "					<span title='"+jidshort+": "+myqueue+"'>"+cpu+ ": "+jidshort+ "</span>"
-	
-						# user info
-						ownerdn = get_dn(ownershort)
-							
-						print "					<span style=\"white-space: pre;\" title='%s'> %-10s</span>" %(ownerdn,ownershort[0:len(ownershort)])
-						print "					<span style=\"white-space: pre;\" title='%s/%s s'>" % (cput, walltime),
-						if effic < .8:
-							print "<font color='gray'>",
-						else:
-							if effic > 1.0:
-								print "<font color='red'>",
-							else:
-								print "<font color='black'>",
-								
-						print "%7.2f%%\t</font> " % (effic*100.0),
-						print "</span>"
-						
-						# Try and except to test if the user has defined mem in script
-						try:
-							if (mem > memreq and memreq > 0.0):
-								print "					<font color='red'>",
-							else:
-								if mem < 0.5*memreq:
-									print "					<font color='gray'>",
-								else:
-									print "					<font color='black'>",
-	
-						except:
-							memreq = 0.0
-							print "					<font color='blue'>",
-						
-	
-						print "%.2f/%.2f GB</font>" %(mem,memreq),
-						print "<br />\n"
-					print "				</span> <!-- class='jobdata' -->"
-					print "			</td>"
-				if (count and ((count%GRID_COLS)) == GRID_COLS-1):
+				if myjob.has_key('queue'):
+					myqueue = myjob['queue'][0]
+
+				if walltime != 0.0:
+					effic = float(cput)/float(walltime)
 					if DEBUG:
-						print "<!-- ",count,"!-->\n"
-					print "		</tr>\n\t\t<tr>\n"
-				count += 1
+						print "<!-- DEBUG effic:",effic,"-->"	
+
+				wrap=" "
+				print "					<span title='"+jidshort+": "+myqueue+"'>"+cpu+ ": "+jidshort+ "</span>"
+
+				# user info
+				ownerdn = get_dn(ownershort)
+					
+				print "					<span style=\"white-space: pre;\" title='%s'> %-10s</span>" %(ownerdn,ownershort[0:len(ownershort)])
+				print "					<span style=\"white-space: pre;\" title='%s/%s s'>" % (cput, walltime),
+				if effic < .8:
+					print "<font color='gray'>",
+				else:
+					if effic > 1.0:
+						print "<font color='red'>",
+					else:
+						print "<font color='black'>",
+						
+				print "%7.2f%%\t</font> " % (effic*100.0),
+				print "</span>"
+				
+				# Try and except to test if the user has defined mem in script
+				try:
+					if (mem > memreq and memreq > 0.0):
+						print "					<font color='red'>",
+					else:
+						if mem < 0.5*memreq:
+							print "					<font color='gray'>",
+						else:
+							print "					<font color='black'>",
+
+				except:
+					memreq = 0.0
+					print "					<font color='blue'>",
+				
+
+				print "%.2f/%.2f GB</font>" %(mem,memreq),
+				print "<br />\n"
+			print "				</span> <!-- class='jobdata' -->"
+			print "			</td>"
+			if (count and ((count%GRID_COLS)) == GRID_COLS-1):
+				if DEBUG:
+					print "<!-- ",count,"!-->\n"
+				print "		</tr>\n\t\t<tr>\n"
+			count += 1
 	
 	print "	</table> <!-- class=\" table-autosort:0 node_grid\" -->"
 
 
 def print_job_list():
+	""" Print the job list. Yet it shows:
+	- The Job ID
+	- The username
+	- The queue
+	- The nodes (when the job is running)
+	- The number of cores asked
+	- The state of the job
+	- The elapsed time
+	- The walltime
+	"""
 	print
 	print "<!-- Job List -->"
 	print "	<table class='example table-sorted-asc table-autosort:0 joblist'>"
@@ -535,14 +556,17 @@ def print_job_list():
 	print "			<th class='table-sortable:numeric'>Cores</th>"
 	print "			<th class='table-sortable:default'>State</th>"
 	print "			<th class='table-sortable:numeric'>Elapsed Time</th>"
+	print "			<th class='table-sortable:numeric'>Walltime</th>"
 	print "		</tr></thead>"
 	print "		<tbody>"
 		
 	for name,job in jobs.items():
 		owner = job['Job_Owner'][0]
-		if DEBUG:
+		if True:
 			print "<!-- DEBUG owner.split: ",owner.split('@')[0],"-->"
 			print "<!-- DEBUG job: ",job,"-->"
+		
+		# Get exec lame, number of cores, number of nodes
 		if job['job_state'][0] == 'R':
 			exec_host = job['exec_host'][0]
 			exec_host = exec_host.split('+')
@@ -564,29 +588,31 @@ def print_job_list():
 			if DEBUG:
 				print "<!-- DEBUG all_hosts: ",all_hosts,"-->"
 		print "			<tr>"
-		print "				<td>",name.split('.')[0],"</td>"
-		print "				<td>",owner.split('@')[0],"</td>"
-		print "				<td>",job['queue'][0],"</td>"
-		print "				<td>",job['Job_Name'][0],"</td>"
+		print "				<td>",name.split('.')[0],"</td>" # The JOB ID
+		print "				<td>",owner.split('@')[0],"</td>" # The username
+		print "				<td>",job['queue'][0],"</td>" # The queue
+		print "				<td>",job['Job_Name'][0],"</td>" # The jobname
 		if job['Resource_List'].has_key('nodect'):
-			print "				<td>"+job['Resource_List']['nodect'][0]+"</td>"
-		else:
-			print "				<td></td>"
+			print "				<td>"+job['Resource_List']['nodect'][0]+"</td>" # The number of nodes asked
 		if job['job_state'][0] == 'R':
-			str_hosts = ", ".join(all_hosts)
+			str_hosts = ", ".join(all_hosts) # Join the all_hosts list in one string separated with comma
 			if DEBUG:
 				print "<!-- DEBUG str_hosts: ",str_hosts,"-->"
-			print "				<td>"+str_hosts+"</td>"
+			print "				<td>"+str_hosts+"</td>" # The running lame
+		else:
+			print "				<td></td>" # The jobs is not running so no lame to print
+		print "				<td>",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
+		print "				<td>",job['job_state'][0],"</td>" # The job state
+		if job['job_state'][0] == 'R':
+			print "				<td>",job['resources_used']['walltime'][0],"</td>" # Get the time elapsed
+		else:
+			print "				<td></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
+		
+		if job['Resource_List'].has_key('walltime'):
+			print "				<td>",job['Resource_List']['walltime'][0],"</td>" # Get the walltime
 		else:
 			print "				<td></td>"
-		print "				<td>",job['Resource_List']['nodes'][0].split('=')[1],"</td>"
-		print "				<td>",job['job_state'][0],"</td>"
-		try:
-			walltime = job['resources_used']['walltime'][0]
-			print "				<td>",walltime,"</td>"
-		except:
-			print "				<td></td>"
-	
+			
 		print "			</tr>"
 	
 	print "		</tbody>\n\t</table>"
