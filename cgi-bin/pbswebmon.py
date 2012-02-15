@@ -20,8 +20,6 @@
 # Modified by: Marcus Breese <mbreese@iupui.edu>
 #			  2011-02-08
 #			  for pbs_python version 4.1.0
-# \file pbswebmon.py
-# \brief  Web Monitor for PBS
 #
 #
 
@@ -42,7 +40,7 @@ import ConfigParser
 NODE_STATES=['down','free','job-exclusive','offline','busy','down,offline','down,job-exclusive','state-unknown','down,busy','job-exclusive,busy']
 JOB_STATES=['R','Q','E','C','H','W','T']
 JOB_EFFIC={}
-USER_EFFIC={}
+USER_EFFIC={} # Dict containing all users and associated jobs
 CONFIG_FILE="/etc/pbswebmon.conf"
 njobs=-1
 users={}
@@ -55,11 +53,10 @@ def header():
 	print '''<html>
 <head>
 	<title>PBSWebMon</title> 
-	<script src="/pbswebmon/table.js" type="text/javascript"></script>
-	<script src="/pbswebmon/datasel.js" type="text/javascript"></script>
+	<script src="/pbswebmon/js/table.js" type="text/javascript"></script>
+	<script src="/pbswebmon/js/datasel.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		var iTimeout;
-		/*=window.setTimeout('if (location.reload) location.reload();', %s*1000);*/
 		function set_refresh(refresh) {
 			if (refresh) {
 				if (window.setTimeout) {
@@ -71,9 +68,9 @@ def header():
 		}
 	</script>
 	
-	<link rel="stylesheet" type="text/css" href="/pbswebmon/table.css" media="all">
-	<link rel="stylesheet" type="text/css" href="/pbswebmon/local.css" media="all">
-</head>''' % (REFRESH_TIME, REFRESH_TIME)
+	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/table.css" media="all">
+	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all">
+</head>''' % (REFRESH_TIME)
 
 def print_summary():
 	""" Print the Summary cluster status
@@ -90,20 +87,25 @@ def print_summary():
 					<INPUT TYPE=CHECKBOX NAME="show_node_grid" CHECKED  onClick=\"show_hide_data(\'node_grid\',this.checked,false)\">Show node list<br />
 					<INPUT TYPE=CHECKBOX NAME="showdetails" CHECKED  onClick=\"show_hide_data(\'jobdata\', this.checked)\">Show all job details<br />
 					<INPUT TYPE=CHECKBOX NAME="Fixed header" CHECKED onClick=\"on_top(\'summary_box\', this.checked)\">Header always on top<br />
-					<INPUT TYPE=CHECKBOX NAME="refresh" CHECKED onClick=\"set_refresh(this.checked)\">Auto-refresh
+					<INPUT TYPE=CHECKBOX NAME="refresh" onClick=\"set_refresh(this.checked)\">Auto-refresh
 				</form>
 			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)
 
 def user_effic(user):
 	""" Efficiency for the running user
-	\param user The user to be parsed
-	\return effic The calculated efficiency
+	\param user The string for the user to be parsed
+	\return effic The calculated efficiency (type float)
 	"""
 	effic = 0.0
-	if user in USER_EFFIC:
+	if USER_EFFIC.has_key(user):
 		for job in USER_EFFIC[user]:
 			effic += job
-		effic /= float(len(USER_EFFIC[user]))*100.0
+			if DEBUG:
+				print "<!-- DEBUG effic job: ",job,"-->"
+		effic = (effic / float(len(USER_EFFIC[user]))*100.0)
+		#effic /= float(len(USER_EFFIC[user]))*100.0
+		if DEBUG:
+			print "<!-- DEBUG effic: ",effic,"-->"
 
 	return effic
 		
@@ -153,14 +155,19 @@ def get_poolmapping(gridmapdir):
 
 def get_dn (ownershort):
 	""" ???
+	\param ownershort The short name for the user
 	\todo Understand this function...
+	\return ownerdn The username
 	"""
 	# user info
 	if ownershort in userdnmap:
-		ownerdn=userdnmap[ownershort]
+		ownerdn = userdnmap[ownershort]
 	else:
-		ownerdn=ownershort
+		ownerdn = ownershort
 
+	if DEBUG:
+		print "<!-- DEBUG ownerdn: ",ownerdn,"-->"
+		print "<!-- DEBUG userdnmap: ",userdnmap,"-->"
 	return ownerdn
 
 def convert_time (timestr):
@@ -231,6 +238,7 @@ def print_user_summary(users):
 	print "					</tr></thead>"
 
 	total = 0
+	tot_effic = 0.0
 	for user, atts in users.items():
 		njobs = '0'
 		if 'jobs' in atts.keys():
@@ -242,7 +250,10 @@ def print_user_summary(users):
 			for state in JOB_STATES:
 				print "						<td>%d</td>" % atts[state]
 				totals[state] += atts[state]
-			print "						<td>%.0f</td>" % user_effic(user)
+			tmp_effic = user_effic(user)
+			print "						<td>%.0f</td>" % tmp_effic
+			tot_effic += tmp_effic
+			del tmp_effic
 			print "					</tr>"
 
 
@@ -250,7 +261,8 @@ def print_user_summary(users):
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
 	for state in JOB_STATES:
-		print "						<td>%s</td>" % totals[state]
+		print "						<td><b>%s</b></td>" % totals[state]
+	print "						<td><b>%.0f</b></td>" %tot_effic
 	print "					</tr></tfoot>"
 	print "				</table>"
 	
@@ -336,7 +348,7 @@ def print_queue_summary(queues):
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
 	for h in headers:
-		print "						<td align='right'>%d</td> " %(totals[h])
+		print "						<td align='right'><b>%d</b></td> " %(totals[h])
 	print "					</tr></tfoot>"
 	print "				</table>"
 
@@ -604,7 +616,7 @@ def print_job_list():
 			print "				<td class=\"lames\"></td>" # The jobs is not running so no lame to print
 		print "				<td class=\"cores\">",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
 		print "				<td class=\"state\">",job['job_state'][0],"</td>" # The job state
-		if job['job_state'][0] == 'R':
+		if job['job_state'][0] == 'R' and job['resources_used'].has_key('walltime'):
 			print "				<td class=\"elapsed_time\">",job['resources_used']['walltime'][0],"</td>" # Get the time elapsed
 		else:
 			print "				<td class=\"elapsed_time\"></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
