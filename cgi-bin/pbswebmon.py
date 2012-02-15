@@ -450,7 +450,7 @@ def print_lame_list(nodelist, nodes):
 			if (node_state == 'down,job-exclusive'):
 				node_state = 'down'
 			print "			<td valign='top'>"
-			print '''				<form class="%s" action="/cgi-bin/pbswebmon.py"">
+			print '''				<form class="%s" action="/cgi-bin/pbswebmon.py">
 					<p><b>%s<input class="job_indiv" type="checkbox" name="showdetails" checked="checked" onclick="show_hide_data_id('%s', this.checked)" />Show jobs</b><br />''' % (node_state,name, name)
 			print '''					%d jobs, %s users, %.2f GB, %s load</p>
 				</form>''' % (len(myjobs),nusers,physmem,loadave)
