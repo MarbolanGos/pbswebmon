@@ -482,9 +482,9 @@ def print_lame_list(nodelist, nodes):
 					users[ownershort]['jobs'] += 1
 				mem = 0.0
 				memreq = 0.0
-				cput = 0.0
-				walltime = 1.0
-				effic = 0.0
+				cput = 0
+				walltime = 1
+				effic = 0
 				if DEBUG:
 					print "<!-- DEBUG myjob.keys:",myjob.keys(),"-->"
 					print "<!-- DEBUG myjob['Resource_List']:",myjob['Resource_List'],"-->"
@@ -502,16 +502,19 @@ def print_lame_list(nodelist, nodes):
 					if DEBUG:
 						print "<!-- DEBUG walltime:",walltime,"-->"	
 
-				if myjob['Walltime'].has_key('Remaining'):
-					# cput = walltime - remaining
-					cput = int(walltime) - int(myjob['Walltime']['Remaining'][0])
-					if DEBUG:
-						print "<!-- DEBUG cput:",cput,"-->"	
+				try:
+					if myjob['Walltime'].has_key('Remaining'):
+						# cput = walltime - remaining
+						cput = int(walltime) - int(myjob['Walltime']['Remaining'][0])
+						if DEBUG:
+							print "<!-- DEBUG cput:",cput,"-->"	
+				except:
+					cput = 0
 					
 				if myjob.has_key('queue'):
 					myqueue = myjob['queue'][0]
 
-				if walltime != 0.0:
+				if walltime != 0:
 					effic = float(cput)/float(walltime)
 					if DEBUG:
 						print "<!-- DEBUG effic:",effic,"-->"	
@@ -638,17 +641,26 @@ def print_job_list():
 			print "				<td class=\"lames\">"+str_hosts+"</td>" # The running lame
 		else:
 			print "				<td class=\"lames\"></td>" # The jobs is not running so no lame to print
-		print "				<td class=\"cores\">",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
+		try:
+			print "				<td class=\"cores\">",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
+		except:
+			print "				<td class=\"cores\" style=\"text-color: red;\"> -- </td>"
 		print "				<td class=\"state\">",job['job_state'][0],"</td>" # The job state
-		if job['job_state'][0] == 'R' and job['resources_used'].has_key('walltime'):
-			print "				<td class=\"elapsed_time\">",job['resources_used']['walltime'][0],"</td>" # Get the time elapsed
-		else:
-			print "				<td class=\"elapsed_time\"></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
+		try:
+			if job['job_state'][0] == 'R' and job['resources_used'].has_key('walltime'):
+				print "				<td class=\"elapsed_time\">",job['resources_used']['walltime'][0],"</td>" # Get the time elapsed
+			else:
+				print "				<td class=\"elapsed_time\"></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
+		except:
+			print "				<td class=\"elapsed_time\" style=\"text-color: red;\"> -- </td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
 		
-		if job['Resource_List'].has_key('walltime'):
-			print "				<td class=\"walltime\">",job['Resource_List']['walltime'][0],"</td>" # Get the walltime
-		else:
-			print "				<td class=\"walltime\"></td>"
+		try:
+			if job['Resource_List'].has_key('walltime'):
+				print "				<td class=\"walltime\">",job['Resource_List']['walltime'][0],"</td>" # Get the walltime
+			else:
+				print "				<td class=\"walltime\"></td>"
+		except:
+			print "				<td class=\"walltime\" style=\"text-color: red;\"> -- </td>"
 			
 		print "			</tr>"
 	
