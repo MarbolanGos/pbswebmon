@@ -249,22 +249,24 @@ def print_user_summary(users):
 
 	total = 0
 	tot_effic = 0.0
+	tbodytmp = '''					<tbody>'''
 	for user, atts in users.items():
 		njobs = '0'
 		if 'jobs' in atts.keys():
 			njobs = atts['jobs']
 			total += njobs
 			
-			print '''					<tbody><tr>
-						<td onmouseover='highlight(\"%s\")' onmouseout='dehighlight(\"%s\")'title='%s'>%s</td>''' % (user,user,get_dn(user),user)
+			tbodytmp += '''<tr>
+						<td onmouseover='highlight(\"%s\")' onmouseout='dehighlight(\"%s\")'title='%s'>%s</td>\n''' % (user,user,get_dn(user),user)
 			for state in JOB_STATES:
-				print "						<td>%d</td>" % atts[state]
+				tbodytmp += "						<td>%d</td>\n" % atts[state]
 				totals[state] += atts[state]
 			tmp_effic = user_effic(user)
-			print "						<td>%.0f</td>" % tmp_effic
+			tbodytmp += "						<td>%.0f</td>\n" % tmp_effic
 			tot_effic += tmp_effic
 			del tmp_effic
-			print "					</tr></tbody>"
+			tbodytmp += "					</tr>"
+	tbodytmp += '''</tbody>'''
 
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
@@ -272,6 +274,8 @@ def print_user_summary(users):
 		print "						<td><b>%s</b></td>" % totals[state]
 	print "						<td><b>%.0f</b></td>" %tot_effic
 	print "					</tr></tfoot>"
+	print tbodytmp
+	del tbodytmp
 	print "				</table>"
 	
 def print_node_summary(nodes):
@@ -302,19 +306,23 @@ def print_node_summary(nodes):
 			totals[node['state'][0]] += 1
 
 	total = 0
+	tbodytmp = "					<tbody>"
 	for s in NODE_STATES:
 		tdclass = s
 		if (s == "down,job-exclusive"):
 			tdclass="down"
-		print '''					<tr>
+		tbodytmp += '''<tr>
 						<td class='%s'>%s</td>
 						<td class='%s'>%d</td>
 					</tr>''' %(tdclass,s,tdclass,totals[s])
 		total += totals[s]
+	tbodytmp += "</tbody>"
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>
 						<td>%d</td>
 					</tr></tfoot>''' %total
+	print tbodytmp
+	del tbodytmp
 	print "				</table>"
 
 
@@ -336,9 +344,10 @@ def print_queue_summary(queues):
 		print "						<th class='table-filterable table-sortable:numeric'>",header,"</th>"
 	print "					</tr></thead>"
 	
+	tbodytmp = "					<tbody>\n"
 	for queue, atts in queues.items():
-		print "					<tbody><tr>"
-		print "						<td>",queue, "</td>"
+		tbodytmp += "					<tr>\n"
+		tbodytmp +=  "						<td>"+"".join(queue)+"</td>\n" # join because queue is a tuple
 
 		state = atts['state_count'][0]
 		state_counts = state.split()
@@ -349,15 +358,19 @@ def print_queue_summary(queues):
 
 
 		for s in headers:
-			print "						<td align='right'>",statedict[s],"</td>"
+			tbodytmp += "						<td align='right'>"+"".join(statedict[s])+"</td>\n" # join because statedict is a tuple
 			totals[s] += int(statedict[s])
 			
-		print "					</tr></tbody>"
+		tbodytmp += "					</tr>\n"
+		
+	tbodytmp += "					</tbody>"
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
 	for h in headers:
 		print "						<td align='right'><b>%d</b></td> " %(totals[h])
 	print "					</tr></tfoot>"
+	print tbodytmp
+	del tbodytmp
 	print "				</table>"
 
 def print_key_table():
