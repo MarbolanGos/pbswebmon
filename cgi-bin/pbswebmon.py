@@ -50,11 +50,16 @@ def header():
 	The parameter REFRESH_TIME is globaly defined.
 	\todo Allow REFRESH_TIME to be included in the parameters file.
 	"""
-	print '''<html>
+	print '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>PBSWebMon</title> 
 	<script src="/pbswebmon/js/table.js" type="text/javascript"></script>
 	<script src="/pbswebmon/js/datasel.js" type="text/javascript"></script>
+	<script type="text/javascript" src="/pbswebmon/js/jquery-1.6.4.min.js"></script>
+	<script type="text/javascript" src="/pbswebmon/js/jquery.cookie.js"></script>
+	<script type="text/javascript" src="/pbswebmon/js/jquery.autosave.js"></script>
 	<script type="text/javascript">
 		var iTimeout;
 		function set_refresh(refresh) {
@@ -66,10 +71,13 @@ def header():
 				if (window.clearTimeout) window.clearTimeout(iTimeout);
 			}
 		}
-	</script>
-	
-	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/table.css" media="all">
-	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all">
+		/* JQuery */
+		$(function () {
+			$('form *').autosave();
+		});
+	</script>	
+	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/table.css" media="all" />
+	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all" />
 </head>''' % (REFRESH_TIME)
 
 def print_summary():
@@ -83,11 +91,13 @@ def print_summary():
 				<b>Cluster status</b><br/>
 				%s<br />
 				Refreshes every %s seconds. <br />
-				<form class="showdetails">
-					<INPUT TYPE=CHECKBOX NAME="show_node_grid" CHECKED  onClick=\"show_hide_data(\'node_grid\',this.checked,false)\">Show node list<br />
-					<INPUT TYPE=CHECKBOX NAME="showdetails" CHECKED  onClick=\"show_hide_data(\'jobdata\', this.checked)\">Show all job details<br />
-					<INPUT TYPE=CHECKBOX NAME="Fixed header" CHECKED onClick=\"on_top(\'summary_box\', this.checked)\">Header always on top<br />
-					<INPUT TYPE=CHECKBOX NAME="refresh" onClick=\"set_refresh(this.checked)\">Auto-refresh
+				<form class="showdetails" action="/cgi-bin/pbswebmon.py">
+					<p>
+						<input type="checkbox" name="show_node_grid" checked="checked"  onclick="show_hide_data(\'node_grid\',this.checked,false)" />Show node list<br />
+						<input type="checkbox" name="showdetails" checked="checked"  onclick="show_hide_data(\'jobdata\', this.checked)" />Show all job details<br />
+						<input type="checkbox" name="Fixed header" checked="checked" onclick="on_top(\'summary_box\', this.checked)" />Header always on top<br />
+						<input type="checkbox" name="refresh" onclick="set_refresh(this.checked)" />Auto-refresh
+					</p>
 				</form>
 			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)
 
@@ -245,8 +255,8 @@ def print_user_summary(users):
 			njobs = atts['jobs']
 			total += njobs
 			
-			print '''					<tr>
-						<td onMouseOver='highlight(\"%s\")' onMouseOut='dehighlight(\"%s\")'title='%s'>%s</td>''' % (user,user,get_dn(user),user)
+			print '''					<tbody><tr>
+						<td onmouseover='highlight(\"%s\")' onmouseout='dehighlight(\"%s\")'title='%s'>%s</td>''' % (user,user,get_dn(user),user)
 			for state in JOB_STATES:
 				print "						<td>%d</td>" % atts[state]
 				totals[state] += atts[state]
@@ -254,9 +264,7 @@ def print_user_summary(users):
 			print "						<td>%.0f</td>" % tmp_effic
 			tot_effic += tmp_effic
 			del tmp_effic
-			print "					</tr>"
-
-
+			print "					</tr></tbody>"
 
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
@@ -329,7 +337,7 @@ def print_queue_summary(queues):
 	print "					</tr></thead>"
 	
 	for queue, atts in queues.items():
-		print "					<tr>"
+		print "					<tbody><tr>"
 		print "						<td>",queue, "</td>"
 
 		state = atts['state_count'][0]
@@ -344,7 +352,7 @@ def print_queue_summary(queues):
 			print "						<td align='right'>",statedict[s],"</td>"
 			totals[s] += int(statedict[s])
 			
-		print "					</tr>"
+		print "					</tr></tbody>"
 	print '''					<tfoot><tr>
 						<td><b>Total</b></td>'''
 	for h in headers:
@@ -442,9 +450,9 @@ def print_lame_list(nodelist, nodes):
 			if (node_state == 'down,job-exclusive'):
 				node_state = 'down'
 			print "			<td valign='top'>"
-			print '''				<form class='%s'>
-					<b>%s<INPUT class='job_indiv' TYPE=CHECKBOX NAME="showdetails" CHECKED onClick=\"show_hide_data_id(\'%s\', this.checked)\"><font size=\'2\'>Show jobs</font></b><br />''' % (node_state,name, name)
-			print '''					%d jobs, %s users, %.2f GB, %s load
+			print '''				<form class="%s" action="/cgi-bin/pbswebmon.py"">
+					<p><b>%s<input class="job_indiv" type="checkbox" name="showdetails" checked="checked" onclick="show_hide_data_id('%s', this.checked)" />Show jobs</b><br />''' % (node_state,name, name)
+			print '''					%d jobs, %s users, %.2f GB, %s load</p>
 				</form>''' % (len(myjobs),nusers,physmem,loadave)
 			print "				<span class='jobdata' id='"+name+"' style='display:block'>"
 			
@@ -504,39 +512,42 @@ def print_lame_list(nodelist, nodes):
 				print "					<span style=\"white-space: pre;\" title='%s'> %-10s</span>" %(ownerdn,ownershort[0:len(ownershort)])
 				print "					<span style=\"white-space: pre;\" title='%s/%s s'>" % (cput, walltime),
 				if effic < .8:
-					print "<font color='gray'>",
+					print "<span style='text-color: gray;'>",
 				else:
 					if effic > 1.0:
-						print "<font color='red'>",
+						print "<span style='text-color: red;'>",
 					else:
-						print "<font color='black'>",
+						print "<span style='text-color: black;'>",
 						
-				print "%7.2f%%\t</font> " % (effic*100.0),
+				print "%7.2f%%\t</span> " % (effic*100.0),
 				print "</span>"
 				
 				# Try and except to test if the user has defined mem in script
 				try:
 					if (mem > memreq and memreq > 0.0):
-						print "					<font color='red'>",
+						print "					<span style='text-color: red;'>",
 					else:
 						if mem < 0.5*memreq:
-							print "					<font color='gray'>",
+							print "					<span style='text-color: gray;'>",
 						else:
-							print "					<font color='black'>",
+							print "					<span style='text-color: black;'>",
 
 				except:
 					memreq = 0.0
-					print "					<font color='blue'>",
+					print "					<span style='text-color: blue;'>",
 				
 
-				print "%.2f/%.2f GB</font>" %(mem,memreq),
+				print "%.2f/%.2f GB</span>" %(mem,memreq),
 				print "<br />\n"
 			print "				</span> <!-- class='jobdata' -->"
 			print "			</td>"
 			if (count and ((count%GRID_COLS)) == GRID_COLS-1):
 				if DEBUG:
 					print "<!-- ",count,"!-->\n"
-				print "		</tr>\n\t\t<tr>\n"
+				if count == len(nodelist)-1:
+					print "		</tr>\n\n"
+				else:
+					print "		</tr>\n\t\t<tr>\n"
 			count += 1
 	
 	#print "	</table> <!-- class=\" table-autosort:0 node_grid\" -->"
