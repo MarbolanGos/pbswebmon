@@ -57,9 +57,9 @@ def header():
 	<title>PBSWebMon</title> 
 	<script src="/pbswebmon/js/table.js" type="text/javascript"></script>
 	<script src="/pbswebmon/js/datasel.js" type="text/javascript"></script>
-	<script type="text/javascript" src="/pbswebmon/js/jquery-1.6.4.min.js"></script>
+	<!--<script type="text/javascript" src="/pbswebmon/js/jquery-1.6.4.min.js"></script>
 	<script type="text/javascript" src="/pbswebmon/js/jquery.cookie.js"></script>
-	<script type="text/javascript" src="/pbswebmon/js/jquery.autosave.js"></script>
+	<script type="text/javascript" src="/pbswebmon/js/jquery.autosave.js"></script>-->
 	<script type="text/javascript">
 		var iTimeout;
 		function set_refresh(refresh) {
@@ -71,10 +71,10 @@ def header():
 				if (window.clearTimeout) window.clearTimeout(iTimeout);
 			}
 		}
-		/* JQuery */
+		/* JQuery
 		$(function () {
 			$('form *').autosave();
-		});
+		}); */
 	</script>	
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/table.css" media="all" />
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all" />
@@ -93,10 +93,10 @@ def print_summary():
 				Refreshes every %s seconds. <br />
 				<form class="showdetails" action="/cgi-bin/pbswebmon.py">
 					<p>
-						<input type="checkbox" name="show_node_grid" checked="checked"  onclick="show_hide_data(\'node_grid\',this.checked,false)" />Show node list<br />
-						<input type="checkbox" name="showdetails" checked="checked"  onclick="show_hide_data(\'jobdata\', this.checked)" />Show all job details<br />
-						<input type="checkbox" name="Fixed header" checked="checked" onclick="on_top(\'summary_box\', this.checked)" />Header always on top<br />
-						<input type="checkbox" name="refresh" onclick="set_refresh(this.checked)" />Auto-refresh
+						<input type="checkbox" id="show_node_grid" name="show_node_grid" checked="checked" onclick="show_hide_data(\'node_grid\',this.checked,false)" />Show node list<br />
+						<input type="checkbox" id="showdetails" name="showdetails" checked="checked" onclick="show_hide_data(\'jobdata\', this.checked)" />Show all job details<br />
+						<input type="checkbox" id="fixed_header" name="Fixed header" checked="checked" onclick="on_top(\'summary_box\', this.checked)" />Header always on top<br />
+						<input type="checkbox" id="refresh" name="refresh" onclick="set_refresh(this.checked)" />Auto-refresh
 					</p>
 				</form>
 			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)

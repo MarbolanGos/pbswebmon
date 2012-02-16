@@ -38,25 +38,25 @@ tr.alternate {
 /* Sorting */
 th.table-sortable {
 	cursor:pointer;
-	background-image:url("sortable.gif");
+	/*background-image:url("sortable.gif");
 	background-position:center left;
-	background-repeat:no-repeat;
+	background-repeat:no-repeat;*/
 	padding-left:12px;
 }
 th.table-sorted-asc {
-	background-image:url("sorted_up.gif");
+	/*background-image:url("sorted_up.gif");
 	background-position:center left;
-	background-repeat:no-repeat;
+	background-repeat:no-repeat;*/
 }
 th.table-sorted-desc {
-	background-image:url("sorted_down.gif");
+	/*background-image:url("sorted_down.gif");
 	background-position:center left;
-	background-repeat:no-repeat;
+	background-repeat:no-repeat;*/
 }
 th.table-filtered {
-	background-image:url("filter.gif");
+	/*background-image:url("filter.gif");
 	background-position:center left;
-	background-repeat:no-repeat;
+	background-repeat:no-repeat;*/
 }
 select.table-autofilter {
 	font-size:smaller;
@@ -68,7 +68,7 @@ table.altstripe tr.alternate2 {
 }
 
 /* Sort Icon Styles */
-table.sort01 th.table-sortable { background-image:url("icons/01_unsorted.gif"); }
+/*table.sort01 th.table-sortable { background-image:url("icons/01_unsorted.gif"); }
 table.sort01 th.table-sorted-asc { background-image:url("icons/01_ascending.gif"); }
 table.sort01 th.table-sorted-desc { background-image:url("icons/01_descending.gif"); }
 
@@ -142,7 +142,7 @@ table.sort18 th.table-sorted-desc { background-image:url("icons/18_descending.gi
 
 table.sort19 th.table-sortable { background-image:url("icons/19_unsorted.gif");padding-left:24px; }
 table.sort19 th.table-sorted-asc { background-image:url("icons/19_ascending.gif"); }
-table.sort19 th.table-sorted-desc { background-image:url("icons/19_descending.gif"); }
+table.sort19 th.table-sorted-desc { background-image:url("icons/19_descending.gif"); }*/
 
 /* Icons box */
 .iconset {
