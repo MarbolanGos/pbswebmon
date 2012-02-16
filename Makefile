@@ -22,8 +22,9 @@ install:
 	mkdir -p $(DESTDIR)/etc
 	mkdir -p $(DESTDIR)/usr/share/doc/pbswebmon
 	install -m 755 cgi-bin/pbswebmon.py $(DESTDIR)/$(PREFIX)/cgi-bin/pbswebmon.py
-	install -m 644 *.js $(DESTDIR)/$(WEBROOT)/pbswebmon
-	install -m 644 *.css $(DESTDIR)/$(WEBROOT)/pbswebmon
+	install -m 644 js/*.js $(DESTDIR)/$(WEBROOT)/pbswebmon
+	install -m 644 css/*.css $(DESTDIR)/$(WEBROOT)/pbswebmon
+	install -m 644 *.html $(DESTDIR)/$(WEBROOT)/pbswebmon
 	install -m 644 pbswebmon.conf $(DESTDIR)/etc/pbswebmon.conf
 	install -m 644 README $(DESTDIR)/usr/share/doc/pbswebmon/README
 
@@ -31,16 +32,16 @@ doc:
 	mkdir -p documentation
 	doxygen
 
-dist:	
-	rm -rf pbswebmon-$(VERSION)
-	svn export https://pbswebmon.svn.sourceforge.net/svnroot/pbswebmon/tags/pbswebmon-$(VERSION) pbswebmon-$(VERSION)
-	sed -e "s/@VERSION@/$(VERSION)/" pbswebmon.spec.in > pbswebmon-$(VERSION)/pbswebmon-$(VERSION).spec
-	tar cvzf pbswebmon-$(VERSION).tar.gz pbswebmon-$(VERSION)
-	rm -rf pbswebmon-$(VERSION)
-
-
-rpm: dist
-	rpmbuild -ta pbswebmon-$(VERSION).tar.gz
+#dist:	
+#	rm -rf pbswebmon-$(VERSION)
+#	svn export https://pbswebmon.svn.sourceforge.net/svnroot/pbswebmon/tags/pbswebmon-$(VERSION) pbswebmon-$(VERSION)
+#	sed -e "s/@VERSION@/$(VERSION)/" pbswebmon.spec.in > pbswebmon-$(VERSION)/pbswebmon-$(VERSION).spec
+#	tar cvzf pbswebmon-$(VERSION).tar.gz pbswebmon-$(VERSION)
+#	rm -rf pbswebmon-$(VERSION)
+#
+#
+#rpm: dist
+#	rpmbuild -ta pbswebmon-$(VERSION).tar.gz
 
 export VERSION
 export PREFIX
