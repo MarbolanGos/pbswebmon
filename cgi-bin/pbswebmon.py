@@ -32,6 +32,7 @@ import os,urllib
 import re
 
 import cgitb; cgitb.enable()
+import cgi
 # get options from config file
 import ConfigParser
 
@@ -45,21 +46,24 @@ CONFIG_FILE="/etc/pbswebmon.conf"
 njobs=-1
 users={}
 
-def header():
+def header(check_refresh):
 	""" Print the header of the HTML page.
 	The parameter REFRESH_TIME is globaly defined.
-	\todo Allow REFRESH_TIME to be included in the parameters file.
+	\param check_refresh If there is some need to automatically refresh page.
 	"""
+	if check_refresh == 1:
+		str_refresh = '''<meta http-equiv="refresh" content="%s">''' % (REFRESH_TIME)
+	else:
+		str_refresh = ''''''
+	
 	print '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	%s
 	<title>PBSWebMon</title> 
 	<script src="/pbswebmon/js/table.js" type="text/javascript"></script>
 	<script src="/pbswebmon/js/datasel.js" type="text/javascript"></script>
-	<!--<script type="text/javascript" src="/pbswebmon/js/jquery-1.6.4.min.js"></script>
-	<script type="text/javascript" src="/pbswebmon/js/jquery.cookie.js"></script>
-	<script type="text/javascript" src="/pbswebmon/js/jquery.autosave.js"></script>-->
 	<script type="text/javascript">
 		var iTimeout;
 		function set_refresh(refresh) {
@@ -75,14 +79,23 @@ def header():
 		$(function () {
 			$('form *').autosave();
 		}); */
-	</script>	
+	</script>
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/table.css" media="all" />
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all" />
-</head>''' % (REFRESH_TIME)
+</head>''' % (str_refresh, REFRESH_TIME)
 
-def print_summary():
+def print_summary(check_refresh):
 	""" Print the Summary cluster status
+	\param check_refresh If there is some need to automatically refresh page.
 	"""
+	
+	if check_refresh == 1:
+		str_refresh = "no"
+		str_check = '''checked="checked"'''
+	else:
+		str_refresh = "yes"
+		str_check = ''''''
+	
 	print "<!-- print_summary -->"
 	print "<div class='summary_box'>"
 	print '''	<table class='summary_box_table'>
@@ -96,10 +109,10 @@ def print_summary():
 						<input type="checkbox" id="show_node_grid" name="show_node_grid" checked="checked" onclick="show_hide_data(\'node_grid\',this.checked,false)" />Show node list<br />
 						<input type="checkbox" id="showdetails" name="showdetails" checked="checked" onclick="show_hide_data(\'jobdata\', this.checked)" />Show all job details<br />
 						<input type="checkbox" id="fixed_header" name="Fixed header" checked="checked" onclick="on_top(\'summary_box\', this.checked)" />Header always on top<br />
-						<input type="checkbox" id="refresh" name="refresh" onclick="set_refresh(this.checked)" />Auto-refresh
+						<input type="checkbox" id="refresh" name="refresh" %s onclick="window.location.replace('/cgi-bin/pbswebmon.py?refresh=%s')" />Auto-refresh
 					</p>
 				</form>
-			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME)
+			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME, str_check, str_refresh)
 
 def user_effic(user):
 	""" Efficiency for the running user
@@ -716,8 +729,20 @@ except PBSError, e:
 	print "<p>Please check configuration in ", CONFIG_FILE, "</p>"
 	sys.exit(1)
 
+
+# Import information after ? to have information on refresh
+form = cgi.FieldStorage()
+if DEBUG:
+	print "<!-- ",form.getvalue('refresh'),"-->"
+check_refresh = 0
+try:
+	if form.getvalue('refresh') == 'yes':
+		check_refresh = 1
+except:
+	check_refresh = 0
+
 # Print the header
-header()
+header(check_refresh)
 print '''
 <body>'''
 
@@ -731,7 +756,7 @@ if len(nodelist) == 0:
 	nodelist.sort()
 
 # Print the cluster status table
-print_summary()
+print_summary(check_refresh)
 
 # Print the user status table
 print "			<td>"
