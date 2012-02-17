@@ -23,8 +23,9 @@ if (document.getElementsByClassName == undefined) {
 function show_hide_data(myclass, do_show, reset_nodes) {
 
     var stl;
-    if (do_show) stl = ''
+    if (do_show) stl = 'block'
     else         stl = 'none';
+    if (myclass == 'node_grid' && stl == 'block') stl = '';
 
 if (document.getElementsByClassName == undefined) {
 	document.getElementsByClassName = function(className)
