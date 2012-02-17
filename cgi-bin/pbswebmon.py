@@ -46,12 +46,12 @@ CONFIG_FILE="/etc/pbswebmon.conf"
 njobs=-1
 users={}
 
-def header(check_refresh):
+def header(checkboxes):
 	""" Print the header of the HTML page.
 	The parameter REFRESH_TIME is globaly defined.
-	\param check_refresh If there is some need to automatically refresh page.
+	\param checkboxes State of the checkboxes.
 	"""
-	if check_refresh == 1:
+	if checkboxes['refresh'] == 1:
 		str_refresh = '''<meta http-equiv="refresh" content="%s">''' % (REFRESH_TIME)
 	else:
 		str_refresh = ''''''
@@ -84,17 +84,22 @@ def header(check_refresh):
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all" />
 </head>''' % (str_refresh, REFRESH_TIME)
 
-def print_summary(check_refresh):
+def print_summary(checkboxes):
 	""" Print the Summary cluster status
-	\param check_refresh If there is some need to automatically refresh page.
+	\param checkboxes State of the checkboxes.
 	"""
 	
-	if check_refresh == 1:
-		str_refresh = "no"
-		str_check = '''checked="checked"'''
-	else:
-		str_refresh = "yes"
-		str_check = ''''''
+	str_check = {}
+	str_refresh = {}
+	
+	# Get the checkbox state for each checkbox
+	for lst_checkbox in checkboxes.iterkeys():
+		if checkboxes[lst_checkbox] == 1:
+			str_refresh[lst_checkbox] = "no"
+			str_check[lst_checkbox] = '''checked="checked"'''
+		else:
+			str_refresh[lst_checkbox] = "yes"
+			str_check[lst_checkbox] = ''''''
 	
 	print "<!-- print_summary -->"
 	print "<div class='summary_box'>"
@@ -108,11 +113,11 @@ def print_summary(check_refresh):
 					<p>
 						<input type="checkbox" id="show_node_grid" name="show_node_grid" checked="checked" onclick="show_hide_data(\'node_grid\',this.checked,false)" />Show node list<br />
 						<input type="checkbox" id="showdetails" name="showdetails" checked="checked" onclick="show_hide_data(\'jobdata\', this.checked)" />Show all job details<br />
-						<input type="checkbox" id="fixed_header" name="Fixed header" checked="checked" onclick="on_top(\'summary_box\', this.checked)" />Header always on top<br />
+						<input type="checkbox" id="fixed_header" name="Fixed header" checked="checked" onclick="on_top(\'summary_box\', this.checked)" />Header at the top<br />
 						<input type="checkbox" id="refresh" name="refresh" %s onclick="window.location.replace('/cgi-bin/pbswebmon.py?refresh=%s')" />Auto-refresh
 					</p>
 				</form>
-			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME, str_check, str_refresh)
+			</td>''' % (strftime("%Y-%m-%d %H:%M:%S"),REFRESH_TIME, str_check['refresh'], str_refresh['refresh'] )
 
 def user_effic(user):
 	""" Efficiency for the running user
@@ -730,19 +735,31 @@ except PBSError, e:
 	sys.exit(1)
 
 
-# Import information after ? to have information on refresh
+# Import information after ? to have information on checkboxes
 form = cgi.FieldStorage()
 if DEBUG:
 	print "<!-- ",form.getvalue('refresh'),"-->"
-check_refresh = 0
+checkboxes = {}
 try:
-	if form.getvalue('refresh') == 'yes':
-		check_refresh = 1
+	if form.getvalue('refresh') == 'yes': checkboxes['refresh'] = 1
+	else: checkboxes['refresh'] = 0
+	if form.getvalue('node') == 'yes': checkboxes['node'] = 1
+	else: checkboxes['node'] = 0
+	if form.getvalue('job') == 'yes': checkboxes['job'] = 1
+	else: checkboxes['job'] = 0
+	if form.getvalue('header') == 'yes': checkboxes['header'] = 1
+	else: checkboxes['header'] = 0
 except:
-	check_refresh = 0
+	checkboxes['refresh'] = 0
+	checkboxes['node'] = 0
+	checkboxes['job'] = 0
+	checkboxes['header'] = 0
+
+if True:
+	print "<!-- ",checkboxes,"-->"
 
 # Print the header
-header(check_refresh)
+header(checkboxes)
 print '''
 <body>'''
 
@@ -756,7 +773,7 @@ if len(nodelist) == 0:
 	nodelist.sort()
 
 # Print the cluster status table
-print_summary(check_refresh)
+print_summary(checkboxes)
 
 # Print the user status table
 print "			<td>"

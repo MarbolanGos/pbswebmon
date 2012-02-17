@@ -23,7 +23,7 @@ if (document.getElementsByClassName == undefined) {
 function show_hide_data(myclass, do_show, reset_nodes) {
 
     var stl;
-    if (do_show) stl = 'block'
+    if (do_show) stl = ''
     else         stl = 'none';
 
 if (document.getElementsByClassName == undefined) {
