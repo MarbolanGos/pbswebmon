@@ -88,21 +88,29 @@ def build_addr(address, opt, key):
 	""" Build the address according to the state needed to be changed
 	\param address The basename address
 	\param opt The options to be added
-	\param key The key which is going to be parsed
+	\param key The key which is going to be changed
 	\return address_opt The address which will be reloaded
 	"""
 	
 	address_opt = address+"?"
 	i = 0
 	for str_lst in opt.keys():
-		i += 1
-		if i == len(opt.list):
-			address_opt += str_lst+"="+opt.getvalue(str_lst) # last parameter to be added
+		if key == str_lst:
+			if opt[str_lst] == "yes":
+				opt2 = "no"
+			else:
+				opt2 = "yes"
 		else:
-			address_opt += str_lst+"="+opt.getvalue(str_lst)+"&"
+			opt2 = opt[str_lst]
+		
+		i += 1
+		if i == len(opt):
+			address_opt += str_lst+"="+opt2 # last parameter to be added
+		else:
+			address_opt += str_lst+"="+opt2+"&"
 	
 	if True:
-		print "<!-- DEBUG address_opt: ",address_opt,"-->"
+		print "<!-- DEBUG address_opt: ",key, address_opt,"-->"
 	
 	return address_opt
 
@@ -113,7 +121,7 @@ def print_summary(script, param_check, checkboxes):
 	\param checkboxes State of the checkboxes.
 	"""
 	address = script[8:] # this needs to be optimized!
-	if True:
+	if DEBUG:
 		print "<!-- DEBUG address: ",address,"-->"
 		print "<!-- DEBUG param_check: ",len(param_check.list),"-->"
 		print "<!-- DEBUG param_check: ",param_check.keys(),"-->"
@@ -123,11 +131,13 @@ def print_summary(script, param_check, checkboxes):
 	
 	# Get the checkbox state for each checkbox
 	for lst_checkbox in checkboxes.iterkeys():
+		if DEBUG:
+			print "<!-- DEBUG lst_checkbox: ", lst_checkbox,"-->"
 		if checkboxes[lst_checkbox] == 1:
-			str_refresh[lst_checkbox] = "no"
+			str_refresh[lst_checkbox] = "yes"
 			str_check[lst_checkbox] = '''checked="checked"'''
 		else:
-			str_refresh[lst_checkbox] = "yes"
+			str_refresh[lst_checkbox] = "no"
 			str_check[lst_checkbox] = ''''''
 	
 	print "<!-- print_summary -->"
@@ -142,14 +152,17 @@ def print_summary(script, param_check, checkboxes):
 					<p>'''
 	
 	# Build all checkboxes
-	build_addr(address, param_check, 'node')
-	print '''						<input type="checkbox" id="show_node_grid" name="show_node_grid" %s onclick="show_hide_data(\'node_grid\',this.checked,false)" />Show node list<br /> ''' % (str_check['node'])
-	print '''						<input type="checkbox" id="showdetails" name="showdetails" %s onclick="show_hide_data(\'jobdata\', this.checked)" />Show all job details<br />''' % (str_check['job'])
-	print '''						<input type="checkbox" id="fixed_header" name="Fixed header" %s onclick="on_top(\'summary_box\', this.checked)" />Header at the top<br />''' % (str_check['header'])
-	print '''						<input type="checkbox" id="refresh" name="refresh" %s onclick="window.location.replace('/cgi-bin/pbswebmon.py?refresh=%s')" />Auto-refresh
+	addr = build_addr(address, str_refresh, 'node')
+	print '''						<input type="checkbox" id="show_node_grid" name="show_node_grid" %s onclick="window.location.replace('%s');show_hide_data(\'node_grid\',!this.checked,false);" />Hide node list<br /> ''' % (str_check['node'], addr)
+	addr = build_addr(address, str_refresh, 'job')
+	print '''						<input type="checkbox" id="showdetails" name="showdetails" %s onclick="window.location.replace('%s');show_hide_data(\'jobdata\', !this.checked);" />Hide all job details<br />''' % (str_check['job'], addr)
+	addr = build_addr(address, str_refresh, 'header')
+	print '''						<input type="checkbox" id="fixed_header" name="Fixed header" %s onclick="window.location.replace('%s');on_top(\'summary_box\', !this.checked);" />Header fixed at the top<br />''' % (str_check['header'], addr)
+	addr = build_addr(address, str_refresh, 'refresh')
+	print '''						<input type="checkbox" id="refresh" name="refresh" %s onclick="window.location.replace('%s')" />Auto-refresh
 					</p>
 				</form>
-			</td>''' % (str_check['refresh'], str_refresh['refresh'] )
+			</td>''' % (str_check['refresh'], addr )
 
 def user_effic(user):
 	""" Efficiency for the running user
@@ -772,23 +785,20 @@ form = cgi.FieldStorage()
 if DEBUG:
 	print "<!-- ",form.getvalue('refresh'),"-->"
 	print "<!-- ",sys.argv[0],"-->"
+
+str_checkboxes = [ 'node', 'header', 'job', 'refresh' ]
 checkboxes = {}
 try:
-	if form.getvalue('refresh') == 'yes': checkboxes['refresh'] = 1
-	else: checkboxes['refresh'] = 0
-	if form.getvalue('node') == 'no': checkboxes['node'] = 0
-	else: checkboxes['node'] = 1
-	if form.getvalue('job') == 'no': checkboxes['job'] = 0
-	else: checkboxes['job'] = 1
-	if form.getvalue('header') == 'no': checkboxes['header'] = 0
-	else: checkboxes['header'] = 1
+	for lst in str_checkboxes:
+		if form.getvalue(lst) == 'yes':
+			checkboxes[lst] = 1
+		else:
+			checkboxes[lst] = 0
 except:
-	checkboxes['refresh'] = 1
-	checkboxes['node']    = 1
-	checkboxes['job']     = 1
-	checkboxes['header']  = 1
+	for lst in str_checkboxes:
+		checkboxes[lst] = 0
 
-if True:
+if DEBUG:
 	print "<!-- ",checkboxes,"-->"
 
 # Print the header
