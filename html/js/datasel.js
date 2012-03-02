@@ -182,11 +182,11 @@ function synchronise_options (){
 	
 	/*   fixed_header*/
 	details  = document.getElementsByName("fixed_header");
-	showdetails=details[0].checked;
-	on_top('summary_box',details[0].checked);
+	showdetails = details[0].checked;
+	on_top('summary_box', details[0].checked);
 	
 	/* refresh*/
 	details  = document.getElementsByName("refresh");
-	showdetails=details[0].checked;
+	showdetails = details[0].checked;
 	set_refresh(details[0].checked);
 }

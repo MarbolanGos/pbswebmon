@@ -84,35 +84,35 @@ def header(checkboxes):
 	<link rel="stylesheet" type="text/css" href="/pbswebmon/css/local.css" media="all" />
 </head>''' % (str_refresh, REFRESH_TIME)
 
-#def build_addr(address, opt, key):
-	#""" Build the address according to the state needed to be changed
-	#\param address The basename address
-	#\param opt The options to be added
-	#\param key The key which is going to be changed
-	#\return address_opt The address which will be reloaded
-	#"""
+def build_addr(address, opt, key):
+	""" Build the address according to the state needed to be changed
+	\param address The basename address
+	\param opt The options to be added
+	\param key The key which is going to be changed
+	\return address_opt The address which will be reloaded
+	"""
 	
-	#address_opt = address+"?"
-	#i = 0
-	#for str_lst in opt.keys():
-		#if key == str_lst:
-			#if opt[str_lst] == "yes":
-				#opt2 = "no"
-			#else:
-				#opt2 = "yes"
-		#else:
-			#opt2 = opt[str_lst]
+	address_opt = address+"?"
+	i = 0
+	for str_lst in opt.keys():
+		if key == str_lst:
+			if opt[str_lst] == "yes":
+				opt2 = "no"
+			else:
+				opt2 = "yes"
+		else:
+			opt2 = opt[str_lst]
 		
-		#i += 1
-		#if i == len(opt):
-			#address_opt += str_lst+"="+opt2 # last parameter to be added
-		#else:
-			#address_opt += str_lst+"="+opt2+"&"
+		i += 1
+		if i == len(opt):
+			address_opt += str_lst+"="+opt2 # last parameter to be added
+		else:
+			address_opt += str_lst+"="+opt2+"&"
 	
-	#if True:
-		#print "<!-- DEBUG address_opt: ",key, address_opt,"-->"
+	if True:
+		print "<!-- DEBUG address_opt: ",key, address_opt,"-->"
 	
-	#return address_opt
+	return address_opt
 
 def print_summary(script, param_check, checkboxes):
 	""" Print the Summary cluster status
@@ -158,11 +158,11 @@ def print_summary(script, param_check, checkboxes):
 	print '''						<input type="checkbox" id="showdetails" name="showdetails" %s onclick="show_hide_data(\'jobdata\', !this.checked, false);" />Hide all job details<br />''' % (str_check['job'])
 	#addr = build_addr(address, str_refresh, 'header')
 	print '''						<input type="checkbox" id="fixed_header" name="Fixed header" %s onclick="on_top(\'summary_box\', !this.checked);" />Do not fix header on top<br />''' % (str_check['header'])
-	#addr = build_addr(address, str_refresh, 'refresh')
-	print '''						<input type="checkbox" id="refresh" name="refresh" %s />Auto-refresh
+	addr = build_addr(address, str_refresh, 'refresh')
+	print '''						<input type="checkbox" id="refresh" name="refresh" %s onclick="set_refresh(this.checked);window.location.replace('%s');" />Auto-refresh
 					</p>
 				</form>
-			</td>''' % (str_check['refresh'])
+			</td>''' % (str_check['refresh'], addr)
 
 def user_effic(user):
 	""" Efficiency for the running user
