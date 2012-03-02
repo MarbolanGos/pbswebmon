@@ -23,8 +23,9 @@ if (document.getElementsByClassName == undefined) {
 function show_hide_data(myclass, do_show, reset_nodes) {
 	
 	var stl;
-	stl = (on_top) ? stl = 'block' : stl = 'none';
-
+	stl = (do_show) ? stl = 'block' : stl = 'none';
+	
+	// This is needed to show the node_grid again
 	if (myclass == 'node_grid' && stl == 'block') stl = '';
 
 	if (document.getElementsByClassName == undefined) {
@@ -46,16 +47,16 @@ function show_hide_data(myclass, do_show, reset_nodes) {
 
 	var elements  = document.getElementsByClassName(myclass);
 
-	for (var el=0; el<elements.length;el++) {
-		elements[el].style.display=stl;
+	for (var el=0; el<elements.length; el++) {
+		elements[el].style.display = stl;
 	}
     
 	if (reset_nodes) {
 // set/clear all checkboxes for individual jobs too
 		var elements  = document.getElementsByClassName("job_indiv");
 
-		for (var el=0; el<elements.length;el++) {
-			elements[el].checked=do_show;
+		for (var el=0; el<elements.length; el++) {
+			elements[el].checked = do_show;
 		}
 	}
 }
@@ -63,7 +64,7 @@ function show_hide_data(myclass, do_show, reset_nodes) {
 function show_hide_data_id(id, do_show) {
 	
 	var stl;
-	stl = (on_top) ? stl = 'block' : stl = 'none';
+	stl = (do_show) ? stl = 'block' : stl = 'none';
 
 	var element  = document.getElementById(id);
 	
