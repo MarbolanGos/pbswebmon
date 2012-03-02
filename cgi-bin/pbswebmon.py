@@ -20,6 +20,9 @@
 # Modified by: Marcus Breese <mbreese@iupui.edu>
 #			  2011-02-08
 #			  for pbs_python version 4.1.0
+#              Fabien Archambault <marbolangos@gmail.com>
+#			  2012-03-01
+#			  many modifications for better display and code understanding
 #
 #
 
