@@ -591,12 +591,12 @@ def print_lame_list(nodelist, nodes):
 				print "					<span style=\"white-space: pre;\" title='%s'> %-10s</span>" %(ownerdn,ownershort[0:len(ownershort)])
 				print "					<span style=\"white-space: pre;\" title='%s/%s s'>" % (cput, walltime),
 				if effic < .8:
-					print "<span style='text-color: gray;'>",
+					print "<span style='color: gray; white-space: pre;'>",
 				else:
 					if effic > 1.0:
-						print "<span style='text-color: red;'>",
+						print "<span style='color: red;'>",
 					else:
-						print "<span style='text-color: black;'>",
+						print "<span style='color: black;'>",
 						
 				print "%7.2f%%\t</span> " % (effic*100.0),
 				print "</span>"
@@ -604,16 +604,16 @@ def print_lame_list(nodelist, nodes):
 				# Try and except to test if the user has defined mem in script
 				try:
 					if (mem > memreq and memreq > 0.0):
-						print "					<span style='text-color: red;'>",
+						print "					<span style='color: red;'>",
 					else:
 						if mem < 0.5*memreq:
-							print "					<span style='text-color: gray;'>",
+							print "					<span style='color: gray;'>",
 						else:
-							print "					<span style='text-color: black;'>",
+							print "					<span style='color: black;'>",
 
 				except:
 					memreq = 0.0
-					print "					<span style='text-color: blue;'>",
+					print "					<span style='color: blue;'>",
 				
 
 				print "%.2f/%.2f GB</span>" %(mem,memreq),
@@ -707,7 +707,7 @@ def print_job_list():
 		try:
 			print "				<td class=\"cores\">",job['Resource_List']['nodes'][0].split('=')[1],"</td>" # The number of cores
 		except:
-			print "				<td class=\"cores\" style=\"text-color: red;\"> -- </td>"
+			print "				<td class=\"cores\" style=\"color: red;\"> -- </td>"
 		print "				<td class=\"state\">",job['job_state'][0],"</td>" # The job state
 		try:
 			if job['job_state'][0] == 'R' and job['resources_used'].has_key('walltime'):
@@ -715,7 +715,7 @@ def print_job_list():
 			else:
 				print "				<td class=\"elapsed_time\"></td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
 		except:
-			print "				<td class=\"elapsed_time\" style=\"text-color: red;\"> -- </td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
+			print "				<td class=\"elapsed_time\" style=\"color: red;\"> -- </td>" # When the job is not running it raises an exception as job['resources_used']['walltime'] is not available. So print nothing
 		
 		try:
 			if job['Resource_List'].has_key('walltime'):
@@ -723,7 +723,7 @@ def print_job_list():
 			else:
 				print "				<td class=\"walltime\"></td>"
 		except:
-			print "				<td class=\"walltime\" style=\"text-color: red;\"> -- </td>"
+			print "				<td class=\"walltime\" style=\"color: red;\"> -- </td>"
 			
 		print "			</tr>"
 	
