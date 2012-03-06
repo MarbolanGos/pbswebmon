@@ -110,7 +110,7 @@ def build_addr(address, opt, key):
 		if i == len(opt):
 			address_opt += str_lst+"="+opt2 # last parameter to be added
 		else:
-			address_opt += str_lst+"="+opt2+"&"
+			address_opt += str_lst+"="+opt2+"&amp;"
 	
 	if True:
 		print "<!-- DEBUG address_opt: ",key, address_opt,"-->"
@@ -323,7 +323,7 @@ def print_user_summary(users):
 			total += njobs
 			
 			tbodytmp += '''<tr>
-						<td onmouseover='highlight(\"%s\")' onmouseout='dehighlight(\"%s\")'title='%s'>%s</td>\n''' % (user,user,get_dn(user),user)
+						<td onmouseover='highlight(\"%s\")' onmouseout='dehighlight(\"%s\")' title='%s'>%s</td>\n''' % (user,user,get_dn(user),user)
 			for state in JOB_STATES:
 				tbodytmp += "						<td>%d</td>\n" % atts[state]
 				totals[state] += atts[state]
